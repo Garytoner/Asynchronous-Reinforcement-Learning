@@ -127,7 +127,7 @@ class PopulationBasedTraining:
             else:
                 self.policy_cfg[policy_id] = dict()
                 for param_name in HYPERPARAMS_TO_TUNE:
-                    self.policy_cfg[policy_id][param_name] = self.cfg[param_name]
+                    self.policy_cfg[policy_id][param_name] = self.cfg.__dict__[param_name]
 
                 if policy_id > 0:  # keep one policy with default settings in the beginning
                     log.debug('Initial cfg mutation for policy %d', policy_id)
@@ -213,7 +213,7 @@ class PopulationBasedTraining:
 
     def _perturb_cfg(self, original_cfg):
         replacement_cfg = copy.deepcopy(original_cfg)
-        return self._perturb(replacement_cfg, default_params=self.cfg)
+        return self._perturb(replacement_cfg, default_params=self.cfg.__dict__)
 
     def _perturb_reward(self, original_reward_shaping):
         if original_reward_shaping is None:

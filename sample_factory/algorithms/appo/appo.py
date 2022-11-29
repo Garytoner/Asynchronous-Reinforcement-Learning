@@ -67,7 +67,7 @@ class CFG:
         self.device = "cpu"
         self.seed = None
         self.save_every_sec = 120
-        self.keep_checkpoints = 3
+        self.keep_checkpoints = 0
         self.save_milestones_sec = -1
         self.stats_avg = 100
         self.learning_rate = 0.00025
@@ -80,8 +80,8 @@ class CFG:
         self.gamma = 0.99
         self.reward_scale = 1
         self.reward_clip = 1.0
-        self.encoder_type = "mlp"
-        self.encoder_subtype = "mlp_mujoco"
+        self.encoder_type = "conv"
+        self.encoder_subtype = "convnet_test"
         self.encoder_custom = None
         self.encoder_extra_fc_layers = 1
         self.hidden_size = 512
@@ -161,6 +161,8 @@ class CFG:
         self.env_frameskip = 4
         self.env_framestack = 4
         self.pixel_format = "CHW"
+
+
 
     def __eq__(self, other):
         if not isinstance(other, Namespace):
@@ -493,6 +495,8 @@ class APPO(ReinforcementLearningAlgorithm):
 
         self.rolloutoverqueue = dict()
 
+        self.train_for_env_steps =  self.cfg.train_for_env_steps
+
         self.train_for_env_steps =  0
 
         for policy_id in range(self.cfg.num_policies):
@@ -500,11 +504,45 @@ class APPO(ReinforcementLearningAlgorithm):
 
         self.terminateRolloutWorker= []
 
-        default_train_envs = self.cfg.train_for_env_steps 
+        self.isSetParameters = False
+
+        self.isloadCheckPoint = False
+
+        #default_train_envs = self.cfg.train_for_env_steps 
+
+        log.info('default train_for_env_steps%d',default_train_envs)
 
         """ self.cfg.ppo_clip_ratio = 100
         self.cfg.ppo_clip_value = 100
         self.cfg.withvtrace = True """
+
+
+    def __del__(self):
+        all_workers = self.actor_workers
+        for workers in self.policy_workers.values():
+            all_workers.extend(workers)
+        all_workers.extend(self.learner_workers.values())
+
+        child_processes = list_child_processes()
+
+        time.sleep(0.1)
+        log.debug('Closing workers...')
+        for i, w in enumerate(all_workers):
+            w.close()
+            time.sleep(0.01)
+        for i, w in enumerate(all_workers):
+            w.join()
+        log.debug('Workers joined!')
+
+        time.sleep(0.1)
+        log.debug('Closing workers...')
+                      
+        finish_wandb(self.cfg)
+
+        # VizDoom processes often refuse to die for an unidentified reason, so we're force killing them with a hack
+        kill_processes(child_processes)
+        time.sleep(0.5)
+        log.info('Done!')
 
 
 
@@ -566,8 +604,13 @@ class APPO(ReinforcementLearningAlgorithm):
         timing = Timing() 
         for policy_id in range(self.cfg.num_policies):
             policy_version = 0
+            #data = (policy_version,None,None)
+            #data = (policy_version,None)
+            #self.actor_critics[policy_id] = data
+            #self.parameters[policy_id] = None
             actor_critic = create_actor_critic(self.cfg, self.obs_space, self.action_space, timing)
-            data = (policy_version,actor_critic.state_dict())
+            #optim_state_dict = dict()
+            data = (policy_version,actor_critic.state_dict(),False)
             self.actor_critics[policy_id] = data
             self.parameters[policy_id] = actor_critic.state_dict()
 
@@ -701,13 +744,14 @@ class APPO(ReinforcementLearningAlgorithm):
 
         learner_idx = 0
         for policy_id in range(self.cfg.num_policies):
-            policy_version,_ = self.actor_critics[policy_id]
-            load_path_or_dict = self.parameters[policy_id]
+            policy_version,state_dict,_ = self.actor_critics[policy_id]
+            #policy_version,_ = self.actor_critics[policy_id]
+            #load_path_or_dict = self.parameters[policy_id]
             env_steps = self.env_steps[policy_id]
             learner_worker = LearnerWorker(
                 learner_idx, policy_id, self.cfg, self.obs_space, self.action_space,
                 self.report_queue, policy_worker_queues[policy_id],self.global_queues[policy_id], self.traj_buffers,
-                policy_locks[policy_id], resume_experience_collection_cv[policy_id],policy_version,load_path_or_dict,env_steps
+                policy_locks[policy_id], resume_experience_collection_cv[policy_id],policy_version,state_dict,env_steps#,optim_state_dict
             )
             learner_worker.start_process()
             learner_worker.init()
@@ -922,13 +966,27 @@ class APPO(ReinforcementLearningAlgorithm):
         return end
 
 
-    def train(self,train_for_env_steps = default_train_envs):
+    def train(self,train_for_env_steps):
     #def run(self):
 
-        if self.is_first_init:
+        """ if self.is_first_init:
             self.is_first_init = False
         else:
-            self._init_finish()
+            self._init_finish() """
+
+        if self.is_first_init:
+            self.init_workers()
+            self.init_pbt()
+            self.finish_initialization()
+            self.is_first_init = False
+        else:
+            for i, w in enumerate(self.learner_workers.values()): 
+                policy_version,state_dict,isSet = self.actor_critics[i] 
+                if isSet:                 
+                    w.setpara(state_dict)
+            #self.policy_avg_stats = dict()
+            for i, w in enumerate(self.actor_workers):
+               w.start()
         """
         This function contains the main loop of the algorithm, as well as initialization/cleanup code.
 
@@ -943,9 +1001,11 @@ class APPO(ReinforcementLearningAlgorithm):
 
         self.train_for_env_steps = self.train_for_env_steps + train_for_env_steps
 
-        self.init_workers()
+        #log.info('self env_steps:%d,default train_for_env_steps%d',self.train_for_env_steps,train_for_env_steps)
+
+        """ self.init_workers()
         self.init_pbt()
-        self.finish_initialization()
+        self.finish_initialization() """
 
         log.info('Collecting experience...')
 
@@ -985,10 +1045,34 @@ class APPO(ReinforcementLearningAlgorithm):
             # This is not an issue with normal exit, e.g. due to desired number of frames reached.
             learner.save_model(timeout=5.0)
 
+        for i, w in enumerate(self.actor_workers):
+            w.presuspand1()
 
-        for i,ws in enumerate(self.actor_workers):
-            ws.preclose()
+        #for i in range(self.cfg.num_workers):
+        #    self.actor_workers[i].presuspand1()
+
+        self.suspandworkers()
+
+        """ all_workers = self.actor_workers
+        for workers in self.policy_workers.values():
+            all_workers.extend(workers)
+        all_workers.extend(self.learner_workers.values())
+
+        child_processes = list_child_processes()
+
+        time.sleep(0.1)
+        log.debug('Closing workers...')
+        for i, w in enumerate(all_workers):
+            w.close()
             time.sleep(0.01)
+        for i, w in enumerate(all_workers):
+            w.join()
+        log.debug('Workers joined!') """
+
+
+        """ for i,ws in enumerate(self.actor_workers):
+            ws.preclose()
+            #time.sleep(0.01)
         
         self.closeworkers()
         all_workers = []
@@ -1027,6 +1111,29 @@ class APPO(ReinforcementLearningAlgorithm):
         self._sys_weights()
 
         for s in self.env_steps.values():
+            log.info('env_steps:%d',s) """
+
+        #self.clearReportQueue()
+
+        for i, w in enumerate(self.learner_workers.values()):
+               w.getpara()
+
+        self._sys_weights()
+
+        fps = self.total_env_steps_since_resume / timing.experience
+        log.info('Collected %r, FPS: %.1f', self.env_steps, fps)
+        log.info('Timing: %s', timing)
+
+        if self._should_end_training():
+            with open(done_filename(self.cfg), 'w') as fobj:
+                fobj.write(f'{self.env_steps}')
+
+        time.sleep(0.5)
+        log.info('Done!')
+
+        #self._sys_weights()
+
+        for s in self.env_steps.values():
             log.info('env_steps:%d',s)
 
         return status
@@ -1035,7 +1142,7 @@ class APPO(ReinforcementLearningAlgorithm):
     def get_parameters(self):
         parameters = dict()
         for policy_id in range(self.cfg.num_policies):
-            _,state_dict = self.actor_critics[policy_id]
+            _,state_dict,_ = self.actor_critics[policy_id]
             parameters[policy_id] = state_dict
         return parameters
 
@@ -1043,12 +1150,15 @@ class APPO(ReinforcementLearningAlgorithm):
         self,
         parameters,
     ) -> None:
+       #self.parameters = parameters
        if isinstance(parameters, dict):
         self.parameters = parameters
         for policy_id in range(self.cfg.num_policies):
             load_path_or_dict = self.parameters[policy_id]
+            policy_version, _,_ = self.actor_critics[policy_id]
             if isinstance(load_path_or_dict, dict):
-               self.actor_critics[policy_id] = load_path_or_dict
+               self.actor_critics[policy_id] = (policy_version+1,load_path_or_dict,True)
+               self.isSetParameters = True
             else:
                 checkpoints = LearnerWorker.get_checkpoints(load_path_or_dict)
                 checkpoint_dict = LearnerWorker.load_checkpoint(checkpoints, 'cpu')
@@ -1056,26 +1166,36 @@ class APPO(ReinforcementLearningAlgorithm):
                     log.debug('Did not load from checkpoint, starting from scratch!')
                 else:
                     log.debug('Loading model from checkpoint')
-                    self.actor_critics[policy_id] = (checkpoint_dict['train_step'],checkpoint_dict['model'])
+                    self.actor_critics[policy_id] = (policy_version+1,checkpoint_dict['model'],True)
+                    self.train_for_env_steps = checkpoint_dict['env_steps']
+                    self.isSetParameters = True
+
 
     def _sys_weights(self):
-        for policy_id in range(self.cfg.num_policies):
-            if not self.global_queues[policy_id].empty():
-                task_type, data = self.global_queues[policy_id].get_nowait()
-                if task_type == TaskType.INIT_MODEL:
-                        policy_version, state_dict = data
-                        self.actor_critics[policy_id] = data
-                        self.parameters[policy_id] = state_dict
-                        log.info('Main policy version %d',policy_version)
+        terminate = False
+        tmp_list = []     
+        while not terminate:
+            for policy_id in range(self.cfg.num_policies):
+                if not self.global_queues[policy_id].empty():
+                    task_type, data = self.global_queues[policy_id].get_nowait()
+                    if task_type == TaskType.INIT_MODEL:
+                            policy_version, state_dict = data
+                            #policy_version, state_dict = data
+                            self.actor_critics[policy_id] = (policy_version, state_dict,False)
+                            self.parameters[policy_id] = state_dict
+                            tmp_list.append(policy_id) 
+                            log.info('Main policy version %d',policy_version)
+            if len(tmp_list) == self.cfg.num_policies:
+                   terminate = True  
         log.info('Main _sys_weights')
 
     def closeworkers(self):
             terminate = False
             all_workers = [] 
             tmp_list = []
-            tmp_list.extend(range(self.cfg.num_workers))         
+            tmp_list.extend(range(self.cfg.num_workers))
+            start = time.time()         
             while not terminate:
-                    start = time.time()
                     for i in range(self.cfg.num_workers):
                         if not self.rolloutoverqueue[i].empty():
                             task_type, data = self.rolloutoverqueue[i].get_nowait()
@@ -1101,7 +1221,30 @@ class APPO(ReinforcementLearningAlgorithm):
                        for i, w in enumerate(all_workers):
                           w.close()
                           time.sleep(0.01)
-                       terminate = True        
+                       terminate = True  
+
+    def suspandworkers(self):
+        terminate = False
+        all_workers = [] 
+        tmp_list = []   
+        start = time.time()     
+        while not terminate:
+                for i in range(self.cfg.num_workers):
+                    if not self.rolloutoverqueue[i].empty():
+                        task_type, data = self.rolloutoverqueue[i].get_nowait()
+                        if task_type == TaskType.ROLLOUT_OVER and tmp_list.count(data) == 0:
+                            self.actor_workers[data].suspand1()
+                            tmp_list.append(data) 
+                            log.info('actor worker %d suspand',data) 
+                if len(tmp_list) == self.cfg.num_workers:# or time.time()-start >2:
+                   terminate = True  
+                   #print((time.time()-start >2)) 
+
+    def clearReportQueue(self):
+        while not self.report_queue.empty():
+            self.report_queue.get_many()
+        log.info('Main clear queue')        
+
                 
 
 

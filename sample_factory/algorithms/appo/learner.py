@@ -10,6 +10,7 @@ from collections import OrderedDict, deque
 from os.path import join
 from queue import Empty, Queue, Full
 from threading import Thread
+import copy
 
 import numpy as np
 import psutil
@@ -250,7 +251,7 @@ def get_lr_scheduler(cfg) -> LearningRateScheduler:
 class LearnerWorker:
     def __init__(
         self, worker_idx, policy_id, cfg, obs_space, action_space, report_queue, policy_worker_queues,global_queue, shared_buffers,
-        policy_lock, resume_experience_collection_cv,policy_version,load_path_or_dict,env_steps
+        policy_lock, resume_experience_collection_cv,policy_version,load_path_or_dict,env_steps# ,optim_state_dict
     ):
         log.info('Initializing the learner %d for policy %d', worker_idx, policy_id)
 
@@ -332,6 +333,11 @@ class LearnerWorker:
 
         self.terminateRolloutWorker = []
 
+        self.global_queue = global_queue
+        self.load_path_or_dict = load_path_or_dict
+        self.load_policy = False
+        #self.optim_state_dict = optim_state_dict
+
         self.process = Process(target=self._run, daemon=True)
 
         if is_continuous_action_space(self.action_space) and self.cfg.exploration_loss == 'symmetric_kl':
@@ -342,9 +348,6 @@ class LearnerWorker:
         self.exploration_loss_func = None
         self.kl_loss_func = None
 
-        self.global_queue = global_queue
-        self.load_path_or_dict = load_path_or_dict
-        self.load_policy = False
 
     def start_process(self):
         self.process.start()
@@ -401,16 +404,97 @@ class LearnerWorker:
         for q in self.policy_worker_queues:
             q.put((TaskType.INIT_MODEL, model_state))
 
-    def _sys_model_weights(self):
+    def _sys_model_weights3(self):
         policy_version = self.train_step
+        optimizer_state_dict = None    
         if self.cfg.device == 'gpu':
-          actor_critic = self.actor_critic.to('cpu')
-        model_state = (policy_version, actor_critic.state_dict())     
+           self.actor_critic.to('cpu')
+        model_state = (policy_version, self.actor_critic.state_dict())
+        #model_state = (policy_version, self.actor_critic.state_dict(),optimizer_state_dict) 
+        #log.info(optimizer_state_dict)  
         log.debug('sys model weights for model version %d', policy_version)        
         self.global_queue.put((TaskType.INIT_MODEL, model_state))
 
+    def _sys_model_weights2(self):
+        policy_version = self.train_step
+        optimizer_state_dict = dict()    
+        if self.cfg.device == 'gpu':
+           self.actor_critic.to('cpu')
+           optimizer_state_dict = self.convert_dict_from_gpu_to_cpu(self.optimizer.state_dict())
+        else:
+           optimizer_state_dict = self.optimizer.state_dict()
+        model_state = (policy_version, self.actor_critic.state_dict(),optimizer_state_dict) 
+        #log.info(optimizer_state_dict)  
+        log.debug('sys model weights for model version %d', policy_version)        
+        self.global_queue.put((TaskType.INIT_MODEL, model_state))
+
+    def _sys_model_weights(self):
+        policy_version = self.train_step
+        actor_critic_state_dict = dict()    
+        if self.cfg.device == 'gpu':
+           actor_critic_state_dict = self.convert_dict_from_gpu_to_cpu(self.actor_critic.state_dict())
+        else:
+           actor_critic_state_dict = self.actor_critic.state_dict()
+        model_state = (policy_version, actor_critic_state_dict) 
+        #log.info(optimizer_state_dict)  
+        log.debug('sys model weights for model version %d', policy_version)        
+        self.global_queue.put((TaskType.INIT_MODEL, model_state))
+
+
+    def _sys_model_weights1(self):
+        policy_version = self.train_step
+        optimizer_state_dict = dict()       
+        if self.cfg.device == 'gpu':
+            self.actor_critic.to('cpu')
+            optimizer_state_dict['state'] = dict()
+            for idx in self.optimizer.state_dict()['state'].keys():
+                    optimizer_state_dict['state'][idx] = dict()
+                    optimizer_state_dict['state'][idx]['step'] = self.optimizer.state_dict()['state'][idx]['step']
+                    optimizer_state_dict['state'][idx]['exp_avg'] = self.optimizer.state_dict()['state'][idx]['exp_avg'].cpu()
+                    optimizer_state_dict['state'][idx]['exp_avg_sq'] = self.optimizer.state_dict()['state'][idx]['exp_avg_sq'].cpu()           
+            optimizer_state_dict['param_groups'] = self.optimizer.state_dict()['param_groups']
+        else:
+            optimizer_state_dict = self.optimizer.state_dict()
+                #torch.tensor(self.optimizer.state_dict()['state'][idx]['exp_avg_sq'],device = 'cpu')
+                #torch.tensor(self.optimizer.state_dict()['state'][idx]['exp_avg'],device = 'cpu')
+            """ self.optimizer.state_dict()['state'][idx]['exp_avg_sq'].cpu()
+            self.optimizer.state_dict()['state'][idx]['exp_avg'].cpu()   """      
+    #model_state = (policy_version, self.actor_critic.state_dict(),self.optimizer.state_dict())       
+        model_state = (policy_version, self.actor_critic.state_dict(),optimizer_state_dict) 
+        #log.info(optimizer_state_dict )  
+        log.debug('sys model weights for model version %d', policy_version)        
+        self.global_queue.put((TaskType.INIT_MODEL, model_state))
+
+    def convert_dict_from_gpu_to_cpu(self,gpu_dict):
+        cpu_dict = dict()
+        if isinstance(gpu_dict, dict):
+            for key,value in gpu_dict.items():
+                if isinstance(value, dict): 
+                    cpu_dict[key] = self.convert_dict_from_gpu_to_cpu(value)
+                elif isinstance(value, list):
+                    cpu_dict[key] = self.convert_list_from_gpu_to_cpu(value)
+                elif isinstance(value, torch.Tensor) and value.is_cuda:
+                    cpu_dict[key] = value.cpu()
+                else:
+                    cpu_dict[key] = value
+        return cpu_dict
+
+    def convert_list_from_gpu_to_cpu(self,gpu_list):
+        cpu_list = list()
+        if isinstance(gpu_list, list):
+            for index,value in enumerate(gpu_list):
+                if isinstance(value, dict): 
+                    cpu_list.append(self.convert_dict_from_gpu_to_cpu(value))
+                elif isinstance(value, list):
+                    cpu_list.append(self.convert_list_from_gpu_to_cpu(value))
+                elif isinstance(value, torch.Tensor) and value.is_cuda:
+                    cpu_list.append(value.cpu())
+                else:
+                    cpu_list.append(value)
+        return cpu_list
+                                     
     def _calculate_gae(self, buffer):
-        """
+        """()
         Calculate advantages using Generalized Advantage Estimation.
         This is leftover the from previous version of the algorithm.
         Perhaps should be re-implemented in PyTorch tensors, similar to V-trace for uniformity.
@@ -670,7 +754,7 @@ class LearnerWorker:
         assert checkpoint is not None
 
         checkpoint_dir = self.checkpoint_dir(self.cfg, self.policy_id)
-        tmp_filepath = join(checkpoint_dir, '.temp_checkpoint')
+        tmp_filepath = join(checkpoint_dir, 'temp_checkpoint')
         checkpoint_name = f'checkpoint_{self.train_step:09d}_{self.env_steps}.pth'
         filepath = join(checkpoint_dir, checkpoint_name)
         log.info('Saving %s...', tmp_filepath)
@@ -1099,9 +1183,9 @@ class LearnerWorker:
 
             if self.new_cfg is not None:
                 for key, value in self.new_cfg.items():
-                    if self.cfg[key] != value:
+                    if self.cfg.__dict__[key] != value:
                         log.debug('Learner %d replacing cfg parameter %r with new value %r', self.policy_id, key, value)
-                        self.cfg[key] = value
+                        self.cfg.__dict__[key] = value
 
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = self.cfg.learning_rate
@@ -1185,7 +1269,10 @@ class LearnerWorker:
                 self.device = torch.device('cpu')
 
             self.init_model(timing)
+
+            #parameters = copy.deepcopy(self.actor_critic.parameters())
             params = list(self.actor_critic.parameters())
+            #params = list(parameters.cpu())
 
             if self.aux_loss_module is not None:
                 params += list(self.aux_loss_module.parameters())
@@ -1198,6 +1285,10 @@ class LearnerWorker:
             )
 
             self.lr_scheduler = get_lr_scheduler(self.cfg)
+
+            self.set_parameters(self.load_path_or_dict)
+            #if self.optim_state_dict != None and  isinstance(self.load_path_or_dict, dict):
+            #        self.optimizer.load_state_dict(self.optim_state_dict)
 
             #self.load_from_checkpoint(self.policy_id)
 
@@ -1219,12 +1310,14 @@ class LearnerWorker:
         with timing.add_time('train'):
             discarding_rate = self._discarding_rate()
 
-            #self._update_pbt()
+            if self.cfg.with_pbt:
+                self._update_pbt()
 
-            if self.load_policy is False:
-               self.set_parameters(self.load_path_or_dict)
-               self.load_policy = True
-
+            #if self.load_policy is False:
+               #self.set_parameters(self.load_path_or_dict)
+               # if self.optim_state_dict != None  and  isinstance(self.load_path_or_dict, dict):
+               #  self.optimizer.load_state_dict(self.optim_state_dict)  
+               #self.load_policy = True 
             train_stats = self._train(buffer, batch_size, experience_size, timing)
 
             if train_stats is not None:
@@ -1288,6 +1381,7 @@ class LearnerWorker:
         log.info('Train loop timing: %s', timing)
         del self.actor_critic
         del self.device
+        log.info('learner finished: %d', self.worker_idx)
 
     def _experience_collection_rate_stats(self):
         now = time.time()
@@ -1389,7 +1483,7 @@ class LearnerWorker:
             while True:
                 try:
                     tasks = self.task_queue.get_many(timeout=0.005)
-
+   
                     for task_type, data in tasks:
                         if task_type == TaskType.TRAIN:
                             with timing.add_time('extract'):
@@ -1404,6 +1498,11 @@ class LearnerWorker:
                             break
                         elif task_type == TaskType.PBT:
                             self._process_pbt_task(data)
+                        elif task_type == TaskType.GET_PARA:
+                            self._sys_model_weights()
+                        elif task_type == TaskType.SET_PARA:
+                            #_,state_dict = data
+                            self.set_parameters(data)
                                 
                 except Empty:
                     break
@@ -1446,6 +1545,8 @@ class LearnerWorker:
             self.experience_buffer_queue.put(None)
             self.training_thread.join()
 
+        log.info('learner %d finished', self.worker_idx)
+
     def init(self):
         self.task_queue.put((TaskType.INIT, None))
         self.initialized_event.wait()
@@ -1465,6 +1566,12 @@ class LearnerWorker:
         self.task_queue.put((TaskType.TERMINATE, None))
         self.shared_buffers._stop_experience_collection[self.policy_id] = False
 
+    def setpara(self,para):
+        self.task_queue.put((TaskType.SET_PARA, para))
+
+    def getpara(self):
+        self.task_queue.put((TaskType.GET_PARA,None))
+
     def join(self):
         join_or_kill(self.process)
 
@@ -1476,6 +1583,7 @@ class LearnerWorker:
             return
         if isinstance(load_path_or_dict, dict):
             self.actor_critic.load_state_dict(load_path_or_dict)
+            self.train_step += 1
         else:
             checkpoints = self.get_checkpoints(load_path_or_dict)
             checkpoint_dict = self.load_checkpoint(checkpoints, self.device)
@@ -1489,3 +1597,8 @@ class LearnerWorker:
         if self.process.is_alive():
             self.terminate = True
             time.sleep(0.01)
+
+    def clearTaskQueue(self):
+        while not self.task_queue.empty():
+            self.task_queue.get_many()
+        log.info('Learner %d clear task queue',self.worker_idx)
