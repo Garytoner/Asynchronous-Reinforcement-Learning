@@ -1046,12 +1046,12 @@ class APPO(ReinforcementLearningAlgorithm):
             learner.save_model(timeout=5.0)
 
         for i, w in enumerate(self.actor_workers):
-            w.presuspand1()
+            w.presuspend1()
 
         #for i in range(self.cfg.num_workers):
-        #    self.actor_workers[i].presuspand1()
+        #    self.actor_workers[i].presuspend1()
 
-        self.suspandworkers()
+        self.suspendworkers()
 
         """ all_workers = self.actor_workers
         for workers in self.policy_workers.values():
@@ -1223,7 +1223,7 @@ class APPO(ReinforcementLearningAlgorithm):
                           time.sleep(0.01)
                        terminate = True  
 
-    def suspandworkers(self):
+    def suspendworkers(self):
         terminate = False
         all_workers = [] 
         tmp_list = []   
@@ -1233,9 +1233,9 @@ class APPO(ReinforcementLearningAlgorithm):
                     if not self.rolloutoverqueue[i].empty():
                         task_type, data = self.rolloutoverqueue[i].get_nowait()
                         if task_type == TaskType.ROLLOUT_OVER and tmp_list.count(data) == 0:
-                            self.actor_workers[data].suspand1()
+                            self.actor_workers[data].suspend1()
                             tmp_list.append(data) 
-                            log.info('actor worker %d suspand',data) 
+                            log.info('actor worker %d suspend',data) 
                 if len(tmp_list) == self.cfg.num_workers:# or time.time()-start >2:
                    terminate = True  
                    #print((time.time()-start >2)) 

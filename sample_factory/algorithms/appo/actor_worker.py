@@ -596,26 +596,8 @@ class VectorEnvRunner:
 
     def reset1(self):
         """
-        Do the very first reset for all environments in a vector. Populate shared memory with initial obs.
-        Note that this is called only once, at the very beginning of training. After this the envs should auto-reset.
-
-        :param report_queue: we use report queue to monitor reset progress (see appo.py). This can be a lengthy
-        process.
-        :return: first requests for policy workers (to generate actions for the very first env step)
-        """
-        """ for env_i, e in enumerate(self.envs):
-            observations = e.reset()       
-            if self.cfg.decorrelate_envs_on_one_worker:
-                env_i_split = self.num_envs * self.split_idx + env_i
-                decorrelate_steps = self.cfg.rollout * env_i_split + self.cfg.rollout * random.randint(0, 4)
-
-                log.info('Decorrelating experience for %d frames...', decorrelate_steps)
-                for decorrelate_step in range(decorrelate_steps):
-                    actions = [e.action_space.sample() for _ in range(self.num_agents)]
-                    observation, rew, dones, info = e.step(actions)         
-            for agent_i, obs in enumerate(observations):
-                actor_state = self.actor_states[env_i][agent_i]
-                actor_state.set_trajectory_data(dict(obs=obs),0) """
+        suspend reset to restart actor worker 
+         """
                     # rnn state is already initialized at zero
         policy_request = self._format_policy_request()
         #print(policy_request)
@@ -722,9 +704,9 @@ class ActorWorker:
 
         self.preterminate = False
 
-        self.suspand = False
+        self.suspend = False
 
-        self.presuspand = False
+        self.presuspend = False
 
         self.num_complete_rollouts = 0
 
@@ -810,7 +792,7 @@ class ActorWorker:
         for policy_id, rollouts in rollouts_per_policy.items():
             self.learner_queues[policy_id].put((TaskType.TRAIN, rollouts))
             
-        if self.preterminate or self.presuspand:      
+        if self.preterminate or self.presuspend:      
                 self.rolloutoverqueue.put((TaskType.ROLLOUT_OVER, self.worker_idx))
                 #self.close()
     def _report_stats(self, stats):
@@ -937,7 +919,7 @@ class ActorWorker:
                             self._preterminate()
                             #break
                         # handling actual workload
-                        if task_type == TaskType.ROLLOUT_STEP and not self.suspand:
+                        if task_type == TaskType.ROLLOUT_STEP and not self.suspend:
                             if 'work' not in timing:
                                 timing.waiting = 0  # measure waiting only after real work has started
 
@@ -946,15 +928,15 @@ class ActorWorker:
                         elif task_type == TaskType.RESET:
                             with timing.add_time('reset'):
                                 self._handle_reset()
-                        elif task_type == TaskType.PBT and not self.suspand:
+                        elif task_type == TaskType.PBT and not self.suspend:
                             self._process_pbt_task(data)
-                        elif task_type == TaskType.UPDATE_ENV_STEPS and not self.suspand:
+                        elif task_type == TaskType.UPDATE_ENV_STEPS and not self.suspend:
                             for env in self.env_runners:
                                 env.update_env_steps(data)
-                        elif task_type == TaskType.PRESUSPAND  and not self.suspand:
-                            self._presuspand()
-                        elif task_type == TaskType.SUSPAND  and not self.suspand: 
-                            self._suspand()
+                        elif task_type == TaskType.PRESUSPEND  and not self.suspend:
+                            self._presuspend()
+                        elif task_type == TaskType.SUSPEND  and not self.suspend: 
+                            self._suspend()
                         elif task_type == TaskType.START:
                             self._start()
                             #with timing.add_time('reset'):
@@ -1013,25 +995,25 @@ class ActorWorker:
     def preclose(self):
          self.task_queue.put((TaskType.PRETERMINATE, None))
 
-    def suspand1(self):
-         self.task_queue.put((TaskType.SUSPAND, None))
+    def suspend1(self):
+         self.task_queue.put((TaskType.SUSPEND, None))
 
-    def presuspand1(self):
-         self.task_queue.put((TaskType.PRESUSPAND, None))
+    def presuspend1(self):
+         self.task_queue.put((TaskType.PRESUSPEND, None))
 
     def start(self):
          self.task_queue.put((TaskType.START, None))
 
-    def _suspand(self):
+    def _suspend(self):
         while not self.task_queue.empty():
             self.task_queue.get_many()
-        self.suspand=True
+        self.suspend=True
 
-    def _presuspand(self):
-         self.presuspand=True
+    def _presuspend(self):
+         self.presuspend=True
 
     def _start(self):
-          if self.suspand:
-            self.suspand=False
-            self.presuspand=False
-            #log.info(self.suspand) 
+          if self.suspend:
+            self.suspend=False
+            self.presuspend=False
+            #log.info(self.suspend) 
