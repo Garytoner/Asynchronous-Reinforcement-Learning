@@ -596,9 +596,10 @@ class VectorEnvRunner:
 
     def reset1(self):
         """
-        suspend reset to restart actor worker 
+        send requests to policy workers to get
+        actions for the very first env step. 
          """
-                    # rnn state is already initialized at zero
+         
         policy_request = self._format_policy_request()
         #print(policy_request)
         return policy_request
@@ -812,7 +813,7 @@ class ActorWorker:
 
     def _handle_reset1(self):
         """
-        Reset all envs, one split at a time (double-buffering), and send requests to policy workers to get
+        send requests to policy workers to get
         actions for the very first env step.
         """
         for split_idx, env_runner in enumerate(self.env_runners):
