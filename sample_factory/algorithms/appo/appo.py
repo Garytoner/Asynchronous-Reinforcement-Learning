@@ -500,7 +500,7 @@ class APPO(ReinforcementLearningAlgorithm):
 
         self.terminateRolloutWorker= []
 
-        default_train_envs = self.cfg.train_for_env_steps 
+        #default_train_envs = self.cfg.train_for_env_steps 
 
         """ self.cfg.ppo_clip_ratio = 100
         self.cfg.ppo_clip_value = 100
