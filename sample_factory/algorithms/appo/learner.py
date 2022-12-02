@@ -1099,9 +1099,9 @@ class LearnerWorker:
 
             if self.new_cfg is not None:
                 for key, value in self.new_cfg.items():
-                    if self.cfg[key] != value:
+                    if self.cfg.__dict__[key] != value:
                         log.debug('Learner %d replacing cfg parameter %r with new value %r', self.policy_id, key, value)
-                        self.cfg[key] = value
+                        self.cfg.__dict__[key] = value
 
                 for param_group in self.optimizer.param_groups:
                     param_group['lr'] = self.cfg.learning_rate
