@@ -896,7 +896,7 @@ class ActorWorker:
 
                         if task_type == TaskType.PRETERMINATE:
                             self._preterminate()
-                            break
+                            #break
                         # handling actual workload
                         if task_type == TaskType.ROLLOUT_STEP:
                             if 'work' not in timing:
