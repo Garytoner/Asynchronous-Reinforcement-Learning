@@ -922,7 +922,7 @@ class APPO(ReinforcementLearningAlgorithm):
         return end
 
 
-    def train(self,train_for_env_steps = default_train_envs):
+    def train(self,train_for_env_steps):
     #def run(self):
 
         if self.is_first_init:
@@ -988,7 +988,7 @@ class APPO(ReinforcementLearningAlgorithm):
 
         for i,ws in enumerate(self.actor_workers):
             ws.preclose()
-            time.sleep(0.01)
+            #time.sleep(0.01)
         
         self.closeworkers()
         all_workers = []
@@ -1057,6 +1057,7 @@ class APPO(ReinforcementLearningAlgorithm):
                 else:
                     log.debug('Loading model from checkpoint')
                     self.actor_critics[policy_id] = (checkpoint_dict['train_step'],checkpoint_dict['model'])
+                    self.train_for_env_steps = checkpoint_dict['env_steps']
 
     def _sys_weights(self):
         for policy_id in range(self.cfg.num_policies):
@@ -1073,9 +1074,9 @@ class APPO(ReinforcementLearningAlgorithm):
             terminate = False
             all_workers = [] 
             tmp_list = []
-            tmp_list.extend(range(self.cfg.num_workers))         
+            tmp_list.extend(range(self.cfg.num_workers))   
+            start = time.time()
             while not terminate:
-                    start = time.time()
                     for i in range(self.cfg.num_workers):
                         if not self.rolloutoverqueue[i].empty():
                             task_type, data = self.rolloutoverqueue[i].get_nowait()
