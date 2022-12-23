@@ -53,7 +53,7 @@ else:
 
 torch.multiprocessing.set_sharing_strategy('file_system')
 default_train_envs = 0
-
+"AsyncRL configuration"
 class CFG:
     def __init__(
         self
@@ -392,8 +392,6 @@ class APPO(ReinforcementLearningAlgorithm):
     encodersubtype:str,
     num_envs_per_worker:int =2,
     num_workers:int=8,
-    withvtrace:bool= True,
-    learning_rate: float= 3e-4,
     device: Union[torch.device, str] = "cpu",
     policy_kwargs: Optional[Dict[str, Any]] = None,
 ):
@@ -403,8 +401,6 @@ class APPO(ReinforcementLearningAlgorithm):
         cfg.encoder_subtype = encodersubtype
         cfg.num_envs_per_worker = num_envs_per_worker
         cfg.num_workers = num_workers
-        cfg.with_vtrace= withvtrace
-        cfg.learning_rate = learning_rate
         cfg.device = device
         if policy_kwargs !=None:
             for key, value in policy_kwargs.items():
@@ -516,7 +512,7 @@ class APPO(ReinforcementLearningAlgorithm):
         self.cfg.ppo_clip_value = 100
         self.cfg.withvtrace = True """
 
-
+# kill all process when model is destroyed
     def __del__(self):
         all_workers = self.actor_workers
         for workers in self.policy_workers.values():
@@ -545,7 +541,7 @@ class APPO(ReinforcementLearningAlgorithm):
         log.info('Done!')
 
 
-
+# init again,discard
     def _init_finish(self):
 
         # shared memory allocation
@@ -599,7 +595,7 @@ class APPO(ReinforcementLearningAlgorithm):
 
         """ for policy_id in range(self.cfg.num_policies):
           self.env_steps[policy_id] = 0 """
-
+# set inital nn parameters
     def create_models(self):
         timing = Timing() 
         for policy_id in range(self.cfg.num_policies):
@@ -1138,14 +1134,14 @@ class APPO(ReinforcementLearningAlgorithm):
 
         return status
 
-
+# get nn parameters
     def get_parameters(self):
         parameters = dict()
         for policy_id in range(self.cfg.num_policies):
             _,state_dict,_ = self.actor_critics[policy_id]
             parameters[policy_id] = state_dict
         return parameters
-
+# set nn parameters
     def set_parameters(
         self,
         parameters,
@@ -1170,7 +1166,7 @@ class APPO(ReinforcementLearningAlgorithm):
                     self.train_for_env_steps = checkpoint_dict['env_steps']
                     self.isSetParameters = True
 
-
+# update nn parameters from learner
     def _sys_weights(self):
         terminate = False
         tmp_list = []     
@@ -1188,7 +1184,7 @@ class APPO(ReinforcementLearningAlgorithm):
             if len(tmp_list) == self.cfg.num_policies:
                    terminate = True  
         log.info('Main _sys_weights')
-
+# close actor worker ,policy worker and learner
     def closeworkers(self):
             terminate = False
             all_workers = [] 
@@ -1222,7 +1218,7 @@ class APPO(ReinforcementLearningAlgorithm):
                           w.close()
                           time.sleep(0.01)
                        terminate = True  
-
+# suspend actor worker
     def suspendworkers(self):
         terminate = False
         all_workers = [] 
@@ -1256,8 +1252,6 @@ class A3C(APPO):
         encodersubtype:str,
         num_envs_per_worker:int =2,
         num_workers:int=8,
-        withvtrace:bool= True,
-        learning_rate: float= 3e-4,
         device: Union[torch.device, str] = "cpu",
         policy_kwargs: Optional[Dict[str, Any]] = None):
             super().__init__(
@@ -1266,8 +1260,6 @@ class A3C(APPO):
                     encodersubtype,
                     num_envs_per_worker,
                     num_workers,
-                    withvtrace,
-                    learning_rate,
                     device,
                     policy_kwargs)
             self.cfg.ppo_clip_ratio = 100
@@ -1282,8 +1274,6 @@ class IMPALA(APPO):
         encodersubtype:str,
         num_envs_per_worker:int =2,
         num_workers:int=8,
-        withvtrace:bool= True,
-        learning_rate: float= 3e-4,
         device: Union[torch.device, str] = "cpu",
         policy_kwargs: Optional[Dict[str, Any]] = None):
             super().__init__(
@@ -1292,8 +1282,6 @@ class IMPALA(APPO):
                     encodersubtype,
                     num_envs_per_worker,
                     num_workers,
-                    withvtrace,
-                    learning_rate,
                     device,
                     policy_kwargs)
             self.cfg.ppo_clip_ratio = 100

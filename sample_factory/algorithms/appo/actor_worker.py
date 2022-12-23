@@ -992,7 +992,7 @@ class ActorWorker:
 
     def join(self):
         join_or_kill(self.process)
-
+# preclose actor worker
     def preclose(self):
          self.task_queue.put((TaskType.PRETERMINATE, None))
 
@@ -1004,15 +1004,15 @@ class ActorWorker:
 
     def start(self):
          self.task_queue.put((TaskType.START, None))
-
+# suspend rollout
     def _suspend(self):
         while not self.task_queue.empty():
             self.task_queue.get_many()
         self.suspend=True
-
+# presuspend rollout
     def _presuspend(self):
          self.presuspend=True
-
+# start rollout
     def _start(self):
           if self.suspend:
             self.suspend=False

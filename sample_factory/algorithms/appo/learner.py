@@ -427,7 +427,7 @@ class LearnerWorker:
         #log.info(optimizer_state_dict)  
         log.debug('sys model weights for model version %d', policy_version)        
         self.global_queue.put((TaskType.INIT_MODEL, model_state))
-
+# send nn parameters to main process
     def _sys_model_weights(self):
         policy_version = self.train_step
         actor_critic_state_dict = dict()    
@@ -1574,7 +1574,7 @@ class LearnerWorker:
 
     def join(self):
         join_or_kill(self.process)
-
+# set nn parameters
     def set_parameters(
         self,
         load_path_or_dict
