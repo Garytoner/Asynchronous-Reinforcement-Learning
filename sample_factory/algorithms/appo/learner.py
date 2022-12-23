@@ -722,7 +722,7 @@ class LearnerWorker:
 
     def _maybe_save(self):
         if time.time() - self.last_saved_time >= self.cfg.save_every_sec or self.should_save_model:
-            #self._save()
+            self._save()
             self.model_saved_event.set()
             self.should_save_model = False
             self.last_saved_time = time.time()
