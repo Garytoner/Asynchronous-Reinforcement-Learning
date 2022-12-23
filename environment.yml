@@ -1,4 +1,4 @@
-name: sample-factory
+name: AsynRL
 channels:
   - pytorch
   - conda-forge
