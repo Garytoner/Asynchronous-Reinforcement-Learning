@@ -87,7 +87,7 @@ PS：
 
 ## 训练效果及FPS：
 
-下图为异步并行算法库接口AsynRL 在Atari-pong NoFarmeSkipV4 1024个环境下， APPO train 16次，每次1000万步的训练的训练效果和FPS。
+下图为异步并行算法库接口AsynRL 在Atari PongNoFrameSkip-V4 1024个环境下， APPO算法 train 16次，每次1000万步的训练的训练效果和FPS。
 
 ### 训练效果
 
