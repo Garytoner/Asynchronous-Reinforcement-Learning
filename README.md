@@ -48,13 +48,13 @@ model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_
 
 ### 获取网络参数
 
-model.GetParameters()
+model.get_parameters()
 
 返回值：神经网络参数
 
 ### 设置网络参数
 
-model.SetParameters(parameters)
+model.set_parameters(parameters)
 
 参数 parameters:神经网络参数或者checkpoint路径
 
