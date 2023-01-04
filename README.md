@@ -42,7 +42,7 @@ model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_
 
 参数 num_envs_per_worker：单个actor worer 跑的环境数
 
-参数 num_workers：rollout worker 数量
+参数 num_workers：actor worker 数量
 
 参数 policy_kwargs：其他超参数 
 
@@ -54,9 +54,9 @@ model.GetParameters()
 
 ### 设置网络参数
 
-model.GetParameters()
+model.SetParameters(parameters)
 
-返回值：神经网络参数
+参数 parameters:网络参数或者checkpoint路径
 
 ### 训练
 
