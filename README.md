@@ -56,7 +56,7 @@ model.GetParameters()
 
 model.SetParameters(parameters)
 
-参数 parameters:网络参数或者checkpoint路径
+参数 parameters:神经网络参数或者checkpoint路径
 
 ### 训练
 
