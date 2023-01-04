@@ -4,7 +4,6 @@ from distutils.util import strtobool
 from sample_factory.algorithms.appo.appo import APPO,A3C,IMPALA
 import torch
 import time
-import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 def parse_args():
