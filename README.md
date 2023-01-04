@@ -44,6 +44,8 @@ model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_
 
 参数 num_workers：actor worker 数量
 
+参数 device：设备类型，若为cpu则只使用cpu，若为gpu,则同时使用cpu和gpu
+
 参数 policy_kwargs：其他超参数 
 
 ### 获取网络参数
