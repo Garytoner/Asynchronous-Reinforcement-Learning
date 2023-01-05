@@ -58,7 +58,7 @@ model.get_parameters()
 
 model.set_parameters(parameters)
 
-参数 parameters:神经网络参数或者checkpoint路径
+参数 parameters:字典类型，键为policy_id，值为对应的神经网络参数或者checkpoint路径
 
 ### 训练
 
