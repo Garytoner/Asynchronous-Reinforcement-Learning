@@ -1,12 +1,17 @@
 #  AsynRL 
 
-
+<!---
+Yizhou: 一个比较General的建议是，返回值这些可以用英文，e.g. return。 同时我个人理解README最好可以用英文。
+-->
 ## 背景
 
-异步并行算法库接口AsynRL基于2020年Intel和University of Sourhern Californi的论文《Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning》提出的[Sample Factory](https://github.com/alex-petrenko/sample-factory)，它是为单机设计的高吞吐训练系统，基于APPO(Asynchronous Proximal PolicyOptimization)算法。能在3D控制场景达到100000 FPS。异步并行算法库接口AsynRL主要是将Sample Factory（1.23.0）接口化，性能与Sample-factory相同，支持APPO、A3C、IMPALA三种异步并行算法。
+异步并行算法库接口AsynRL基于2020年Intel和University of Sourhern Californi<!-- Yizhou：cite 作者名字已经其github profile而不是机构名称 -->的论文《Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning》提出的[Sample Factory](https://github.com/alex-petrenko/sample-factory)，它是为单机设计的高吞吐训练系统，基于APPO(Asynchronous Proximal PolicyOptimization)算法。能在3D控制场景达到100000 FPS。异步并行算法库接口AsynRL主要是将Sample Factory（1.23.0）接口化，性能与Sample-factory相同，支持APPO、A3C、IMPALA三种异步并行算法。
 
 ## 安装
 ### 主要依赖库版本
+
+
+
 
 Python：3.8
 
@@ -14,7 +19,7 @@ Pythorch：1.6.0
 
 Gym：0.17.2
 
-### 安装流程（linux）
+### 安装流程（linux）<!-- foo bar -->
 
 1、下载代码: git clone https://github.com/Garytoner/AsynRL.git
 
@@ -50,7 +55,13 @@ model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_
 
 ### 获取网络参数
 
-model.get_parameters()
+<!-- foo bar -->
+
+<!---
+Yizhou: 这里可以用 `model.get_parameters()`
+-->
+
+`model.get_parameters()`
 
 返回值：神经网络参数
 
