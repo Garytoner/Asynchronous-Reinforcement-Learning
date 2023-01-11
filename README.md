@@ -1,7 +1,16 @@
-#  AsynRL 
+#  AsynRL <!-- Yizhou：建议给全称-->
 
 <!---
 Yizhou: 一个比较General的建议是，返回值这些可以用英文，e.g. return。 同时我个人理解README最好可以用英文。
+-->
+
+<!---
+Yizhou: 另一个General的建议，背景之前，几句话描述一下这个repo是做什么的
+-->
+
+
+<!---
+Yizhou: 同时请参考 https://www.markdownguide.org/basic-syntax/#code-blocks 完善文档中code的表达
 -->
 ## 背景
 
@@ -11,15 +20,19 @@ Yizhou: 一个比较General的建议是，返回值这些可以用英文，e.g. 
 ### 主要依赖库版本
 
 
-
-
+<!---
+Yizhou: GYM 0.25之后的大改 ，支持不支持？
+-->
+<!---
+Yizhou: 这里可以用表格或者着list
+-->
 Python：3.8
 
-Pythorch：1.6.0
+Pythorch：1.6.0 <!-- TYPO -->
 
 Gym：0.17.2
 
-### 安装流程（linux）<!-- foo bar -->
+### 安装流程（linux）<!-- 不用 specify是linux？我感觉 -->
 
 1、下载代码: git clone https://github.com/Garytoner/AsynRL.git
 
@@ -55,7 +68,6 @@ model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_
 
 ### 获取网络参数
 
-<!-- foo bar -->
 
 <!---
 Yizhou: 这里可以用 `model.get_parameters()`
@@ -80,7 +92,9 @@ model.train(train_for_env_steps)
 PS：
 
 异步并行算法库接口AsnyRL具体形式与调用方法可参见main.py。
-
+<!---
+Yizhou: 为什么还要参考main.py,是否可以提供一个例子，比如如何执行可以得到，下面的结果
+-->
 
 ## AsynRL的train流程
 
@@ -101,7 +115,9 @@ PS：
 ## 训练效果及FPS：
 
 下图为异步并行算法库接口AsynRL 在Atari PongNoFrameSkip-V4 1024个环境下， APPO算法 train 16次，每次1000万步的训练的训练效果和FPS。
-
+<!---
+Yizhou: 这里可以用define一下FPS，like，Frame per Second
+-->
 ### 训练效果
 
 <p>
