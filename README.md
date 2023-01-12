@@ -24,7 +24,7 @@ conda env create -f environment.yml
 
 conda activate Asynchronous-Reinforcement-Learning
 
-## AsynRL使用说明
+## Asynchronous-Reinforcement-Learning使用说明
 
 ### 接口形式
 
