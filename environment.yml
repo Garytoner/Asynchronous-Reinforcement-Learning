@@ -1,4 +1,4 @@
-name: AsynRL
+name: Asynchronous-Reinforcement-Learning
 channels:
   - pytorch
   - conda-forge
