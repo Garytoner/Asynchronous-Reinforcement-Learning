@@ -1,30 +1,30 @@
-#  AsynRL 
+#  Asynchronous-Reinforcement-Learning
 
 
 ## 背景
-
-异步并行算法库接口AsynRL基于2020年Intel和University of Sourhern Californi的论文《Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning》提出的[Sample Factory](https://github.com/alex-petrenko/sample-factory)，它是为单机设计的高吞吐训练系统，基于APPO(Asynchronous Proximal PolicyOptimization)算法。能在3D控制场景达到100000 FPS。异步并行算法库接口AsynRL主要是将Sample Factory（1.23.0）接口化，性能与Sample-factory相同，支持APPO、A3C、IMPALA三种异步并行算法。
+异步并行算法库接口Asynchronous-Reinforcement-Learning将用于网络渗透研究，可以配合[EVO-PopulationBasedTraining](https://github.com/yyzpiero/EVO-PopulationBasedTraining)使用。异步并行算法库接口Asynchronous-Reinforcement-Learning基于2020年Aleksei Petrenko的论文《Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning》提出的[Sample-Factory](https://github.com/alex-petrenko/sample-factory)，它是为单机设计的高吞吐训练系统，基于APPO(Asynchronous Proximal PolicyOptimization)算法。能在3D控制场景达到100000 FPS。异步并行算法库接口AsynRL主要是将Sample-Factory（1.23.0）接口化，性能与Sample-factory相同，支持APPO、A3C、IMPALA三种异步并行算法。
 
 ## 安装
 ### 主要依赖库版本
+| #    | 依赖库                          | 版本   | 
+| ---- | ------------------------------ | ------ |
+| 1    |Python                          | 3.8    | 
+| ---- | ------------------------------ | ------ |
+| 2    |Pytorch                         | 1.6.0  | 
+| ---- | ------------------------------ | ------ |
+| 3    |Gym                             | 0.17.2 | 
 
-Python：3.8
+### 安装流程
 
-Pythorch：1.6.0
-
-Gym：0.17.2
-
-### 安装流程（linux）
-
-1、下载代码: git clone https://github.com/Garytoner/AsynRL.git
+1、下载代码: git clone https://github.com/Garytoner/Asynchronous-Reinforcement-Learning.git
 
 2、创建conda虚拟环境：
 
-cd AsynRL
+cd Asynchronous-Reinforcement-Learning
 
 conda env create -f environment.yml
 
-conda activate AsynRL
+conda activate Asynchronous-Reinforcement-Learning
 
 ## AsynRL使用说明
 
@@ -34,41 +34,37 @@ model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_
 
 ### 参数说明
 
-参数 env：训练的环境
+param env：训练的环境
 
-参数 encoder：编码器类型
+param encoder：编码器类型
 
-参数 encodersubtype：编码子类型
+param encodersubtype：编码子类型
 
-参数 num_envs_per_worker：单个actor worer 跑的环境数
+param num_envs_per_worker：单个actor worer 跑的环境数
 
-参数 num_workers：actor worker 数量
+param num_workers：actor worker 数量
 
-参数 device：设备类型，若为cpu，则只使用cpu，若为gpu,则同时使用cpu和gpu
+param device：设备类型，若为cpu，则只使用cpu，若为gpu,则同时使用cpu和gpu
 
-参数 policy_kwargs：其他超参数 
+param policy_kwargs：其他超参数 
 
 ### 获取网络参数
 
 model.get_parameters()
 
-返回值：神经网络参数
+return：神经网络参数
 
 ### 设置网络参数
 
 model.set_parameters(parameters)
 
-参数 parameters:字典类型，键为policy_id，值为对应的神经网络参数或者checkpoint路径
+param parameters:字典类型，键为policy_id，值为对应的神经网络参数或者checkpoint路径
 
 ### 训练
 
 model.train(train_for_env_steps)
 
-参数 train_for_env_steps:一次train的步数 
-
-PS：
-
-异步并行算法库接口AsnyRL具体形式与调用方法可参见main.py。
+param train_for_env_steps:一次train的步数 
 
 
 ## AsynRL的train流程
@@ -77,7 +73,7 @@ PS：
 
 2、创建policy worker对象，然后启动policy worker进程；
 
-3创建actor worker对象，在初始化对象时，创建了actor worker进程，在创建actor worker对象时，创建了两个env_runner，env_runner负责具体的rollout；
+3、创建actor worker对象，在初始化对象时，创建了actor worker进程，在创建actor worker对象时，创建了两个env_runner，env_runner负责具体的rollout；
 
 4、首先reset  actor worker，actor_worker向policy_worker中发送请求，policy_worker收到请求后，向actor_worker发送rollout消息，actor_worker收到后进入awaken状态，然后开始rollout；
 
@@ -87,7 +83,7 @@ PS：
 
 7、一次train结束后，learner将网络参数放在共享内存中，主进程再更新相关网络参数。在每一次train之前可以设置网络参数，设置的参数有state_dict和check_point两种,均为整体网络参数。
 
-## 训练效果及FPS：
+## 训练效果及FPS(Frame per Second)：
 
 下图为异步并行算法库接口AsynRL 在Atari PongNoFrameSkip-V4 1024个环境下， APPO算法 train 16次，每次1000万步的训练的训练效果和FPS。
 
@@ -99,9 +95,9 @@ PS：
 
 ### FPS
 
-> <p>
->     <img src="./images/image4.png"/>
-> </p>
+<p>
+     <img src="./images/image4.png"/>
+</p>
 
 ## Sample-Factory介绍
 
