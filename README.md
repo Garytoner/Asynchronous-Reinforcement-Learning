@@ -83,7 +83,7 @@ param train_for_env_steps:The number of steps for training
 
 ## training effect and FPS(Frame per Second)：
 
-The figure below shows the training effect and FPS of the asynchronous parallel algorithm library interface AsynRL in Atari PongNoFrameSkip-V4 1024 environment, APPO algorithm train 16 times, each 10 million steps of training.
+The figure below shows the training effect and FPS of Asynchronous-Reinforcement-Learning in Atari PongNoFrameSkip-V4 1024 environment, APPO algorithm train 16 times, each 10 million steps of training.
 
 ### training effect
 
