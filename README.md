@@ -65,7 +65,7 @@ model.train(train_for_env_steps)
 param train_for_env_steps:一次train的步数 
 
 
-## AsynRL的train流程
+## Asynchronous-Reinforcement-Learning的train流程
 
 1、首先创建learner对象，然后启动learner进程，在learner进程中，启动了train_loop线程用于计算梯度，更新网络参数；
 
