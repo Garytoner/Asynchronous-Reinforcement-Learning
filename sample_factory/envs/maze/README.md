@@ -1,10 +1,9 @@
 
-
 ## Setup instructions
 
 - Follow instructions in the repo to install maze environments
 
-```
+```bash
 git clone https://github.com/MattChanTK/gym-maze
 cd gym-maze
 python setup.py install
@@ -12,10 +11,14 @@ python setup.py install
 
 - unenble render
 
-```
+```bash
 cd ./envs
 vi maze_env.py
+```
+
 set enable_render to False like this:
+
+```python
 class MazeEnvRandom10x10Plus(MazeEnv):
 
     def __init__(self, enable_render=False):
@@ -24,9 +27,13 @@ class MazeEnvRandom10x10Plus(MazeEnv):
 
 - modify move_robot function
 
-```
+```bash
 vi modify maze_view_2d.py
+```
+
 modify move_robot function like this:
+
+```python
  def move_robot(self, dir):
         if dir not in self.__maze.COMPASS.keys():
             if str(dir) == '0':
