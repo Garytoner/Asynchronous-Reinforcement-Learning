@@ -1,4 +1,4 @@
-#  AsynRL <!-- Yizhou：建议给全称-->
+#  Asynchronous-Reinforcement-Learning<!-- Yizhou：建议给全称-->
 
 <!---
 Yizhou: 一个比较General的建议是，返回值这些可以用英文，e.g. return。 同时我个人理解README最好可以用英文。
@@ -12,12 +12,12 @@ Yizhou: 另一个General的建议，背景之前，几句话描述一下这个re
 <!---
 Yizhou: 同时请参考 https://www.markdownguide.org/basic-syntax/#code-blocks 完善文档中code的表达
 -->
-## 背景
+## Background
+Asynchronous-Reinforcement-Learning is used for the research of network attack and can be used with [EVO-PopulationBasedTraining](https://github.com/yyzpiero/EVO-PopulationBasedTraining).  Asynchronous-Reinforcement-Learning is based on [Sample-Factory](https://github.com/alex-petrenko/sample-factory), which is based on the APPO (Asynchronous Proximal Policy Optimization) algorithm. Sample-Factory is proposed in the paper "Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning" by Aleksei Petrenko et al. in 2020. It is a high-throughput training system optimized for a single-machine setting and can achieve throughput higher than 100000 environment frames/second on non-trivial control problems in 3D without sacrificing sample efficiency. Asynchronous-Reinforcement-Learning  transform Sample-Factory (1.23.0) to interface  ,with  the same performance as Sample-factory and can support APPO、A3C、IMPALA.
 
 异步并行算法库接口AsynRL基于2020年Intel和University of Sourhern Californi<!-- Yizhou：cite 作者名字已经其github profile而不是机构名称 -->的论文《Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning》提出的[Sample Factory](https://github.com/alex-petrenko/sample-factory)，它是为单机设计的高吞吐训练系统，基于APPO(Asynchronous Proximal PolicyOptimization)算法。能在3D控制场景达到100000 FPS。异步并行算法库接口AsynRL主要是将Sample Factory（1.23.0）接口化，性能与Sample-factory相同，支持APPO、A3C、IMPALA三种异步并行算法。
 
-## 安装
-### 主要依赖库版本
+### Installation instructions
 
 
 <!---
@@ -26,9 +26,9 @@ Yizhou: GYM 0.25之后的大改 ，支持不支持？
 <!---
 Yizhou: 这里可以用表格或者着list
 -->
-Python：3.8
+1、Download code: git clone https://github.com/Garytoner/Asynchronous-Reinforcement-Learning.git
 
-Pythorch：1.6.0 <!-- TYPO -->
+2、Create a conda virtual environment： <!-- TYPO -->
 
 Gym：0.17.2
 
@@ -42,31 +42,31 @@ cd AsynRL
 
 conda env create -f environment.yml
 
-conda activate AsynRL
+conda activate Asynchronous-Reinforcement-Learning
 
-## AsynRL使用说明
+## Asynchronous-Reinforcement-Learning Instructions
 
-### 接口形式
+### Interface
 
-model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：其中APPO可变换为A3C或IMPALA
+model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：APPO can be transformed into A3C or IMPALA
 
-### 参数说明
+### Parameter instructions
 
-参数 env：训练的环境
+param env: training environment
 
-参数 encoder：编码器类型
+param encoder: encoder type
 
-参数 encodersubtype：编码子类型
+param encodersubtype: encoding subtype
 
-参数 num_envs_per_worker：单个actor worer 跑的环境数
+param num_envs_per_worker: the number of environments that a single actor woreer runs
 
-参数 num_workers：actor worker 数量
+param num_workers: number of actor workers
 
-参数 device：设备类型，若为cpu，则只使用cpu，若为gpu,则同时使用cpu和gpu
+param device: device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
 
-参数 policy_kwargs：其他超参数 
+param policy_kwargs: other hyperparameters
 
-### 获取网络参数
+### Get neural network parameters
 
 
 <!---
@@ -75,50 +75,46 @@ Yizhou: 这里可以用 `model.get_parameters()`
 
 `model.get_parameters()`
 
-返回值：神经网络参数
+return：neural network parameters
 
-### 设置网络参数
+### Set neural network parameters
 
 model.set_parameters(parameters)
 
-参数 parameters:字典类型，键为policy_id，值为对应的神经网络参数或者checkpoint路径
+param parameters:Dictionary type, the key is policy_id, and the value is the corresponding neural network parameter or checkpoint path
 
-### 训练
+### Training
 
 model.train(train_for_env_steps)
 
-参数 train_for_env_steps:一次train的步数 
-
-PS：
-
-异步并行算法库接口AsnyRL具体形式与调用方法可参见main.py。
+param train_for_env_steps:The number of steps for training
 <!---
 Yizhou: 为什么还要参考main.py,是否可以提供一个例子，比如如何执行可以得到，下面的结果
 -->
 
-## AsynRL的train流程
+## Asynchronous-Reinforcement-Learning's train process
 
-1、首先创建learner对象，然后启动learner进程，在learner进程中，启动了train_loop线程用于计算梯度，更新网络参数；
+1. First create the learner object, and then start the learner process. In the learner process, start the train_loop thread to calculate the gradient and update the network parameters;
 
-2、创建policy worker对象，然后启动policy worker进程；
+2. Create a policy worker object, and then start the policy worker process;
 
-3创建actor worker对象，在初始化对象时，创建了actor worker进程，在创建actor worker对象时，创建了两个env_runner，env_runner负责具体的rollout；
+3. Create the actor worker object. When the object is initialized, the actor worker process is created. When the actor worker object is created, two env_runners are created, and the env_runner is responsible for the specific rollout;
 
-4、首先reset  actor worker，actor_worker向policy_worker中发送请求，policy_worker收到请求后，向actor_worker发送rollout消息，actor_worker收到后进入awaken状态，然后开始rollout；
+4. First reset actor worker, actor_worker sends a request to policy_worker, policy_worker sends a rollout message to actor_worker after receiving the request, actor_worker enters the awake state after receiving it, and then starts rollout;
 
-5、actor_worker运行step后向policy_worker中发送请求，policy_worker收到请求并进行处理后，向actor_worker发送advance_rollout_request消息，actor_worker收到消息处理后运行step后向policy_worker中发送请求，一次完整的rollout结束后，向leraner发送train命令，learner开始准备buffer，并将经验放入buffer中，learner的train_loop周期性的处理数据并更新网络参数。Learner将网络参数放在共享内存中，policy worker 再从共享内存中周期性更新网络参数。
+5. After the actor_worker runs the step, it sends a request to the policy_worker. After the policy_worker receives the request and processes it, it sends an advance_rollout_request message to the actor_worker. After the actor_worker receives the message and processes it, it runs the step and sends a request to the policy_worker. After a complete rollout, it sends a request to the The leraner sends the train command, the learner starts to prepare the buffer, and puts the experience into the buffer, and the train_loop of the learner periodically processes the data and updates the network parameters. The learner puts the network parameters in the shared memory, and the policy worker periodically updates the network parameters from the shared memory.
 
-6.train N步后，训练将结束，actor worker  rollout结束后 ，暂停相应的actor worker，所有的actor worker都暂停后，再结束train.
+6. After N steps of training, the training will end. After the actor worker rollout ends, the corresponding actor worker will be suspended. After all the actor workers are suspended, the training will end.
 
-7、一次train结束后，learner将网络参数放在共享内存中，主进程再更新相关网络参数。在每一次train之前可以设置网络参数，设置的参数有state_dict和check_point两种,均为整体网络参数。
+7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include state_dict and check_point, both of which are overall network parameters.
 
-## 训练效果及FPS：
+## training effect and FPS(Frame per Second)：
 
-下图为异步并行算法库接口AsynRL 在Atari PongNoFrameSkip-V4 1024个环境下， APPO算法 train 16次，每次1000万步的训练的训练效果和FPS。
+The figure below shows the training effect and FPS of Asynchronous-Reinforcement-Learning in Atari PongNoFrameSkip-V4 1024 environment, APPO algorithm train 16 times, each 10 million steps of training.
 <!---
 Yizhou: 这里可以用define一下FPS，like，Frame per Second
 -->
-### 训练效果
+### training effect
 
 <p>
     <img src="./images/image3.png"/>
@@ -126,13 +122,13 @@ Yizhou: 这里可以用define一下FPS，like，Frame per Second
 
 ### FPS
 
-> <p>
->     <img src="./images/image4.png"/>
-> </p>
+<p>
+     <img src="./images/image4.png"/>
+</p>
 
-## Sample-Factory介绍
+## Sample-Factory
 
-一个典型的强化学习中有三个主要的计算任务：环境仿真，模型推理和反向传播。设计的原则是让最慢的任务不要等其它的任务，因为系统的吞吐取决于最慢任务的吞吐。每种任务对应一种类型的组件。组件之间通过高速的FIFO队列和共享内存通信。三种组件分别为：1) Rollout worker：每个rollout worker可以有多个环境实例，与这些环境交互采集经验。Rollout worker一方面将经验通过共享内存给policy worker，另一方面通过共享内存给learner。2）Policy worker：收集多个rollout worker来的状态，通过策略得到动作，通过共享内存传回给rollout worker。3）Learner：通过共享内存从rollout worker拿到经验轨迹，更新策略，然后通过GPU memory（因policy worker与learner都跑在GPU上）发往policy worker。Policy worker就可以用新的策略生成动作了。Rollout worker和policy worker一起称为sampler子系统。为了解决rollout worker等待policy worker返回动作的问题，使用了Double-Buffered Sampling的技巧。即在rollout worker上存一组环境 ，并分成两组，通过轮流来提高CPU利用率。
+There are three main computational tasks in a typical RL: environment simulation, model inference, and backpropagation. The design principle is to let the slowest task not wait for other tasks, because the throughput of the system depends on the throughput of the slowest task. Each task corresponds to a type of component. Components communicate through high-speed FIFO queues and shared memory. The three components are: 1) Rollout worker: Each rollout worker can have multiple environment instances, and interact with these environments to collect experience. On the one hand, the Rollout worker passes the experience to the policy worker through the shared memory, and on the other hand, to the learner through the shared memory. 2) Policy worker: Collect the status of multiple rollout workers, get actions through policies, and send them back to rollout workers through shared memory. 3) Learner: Get the experience track from the rollout worker through the shared memory, update the policy, and then send it to the policy worker through the GPU memory (because both the policy worker and the learner run on the GPU). The policy worker can generate actions with the new policy.Rollout worker and policy worker are called sampler subsystem together. In order to solve the problem that the rollout worker waits for the policy worker to return the action, the technique of Double-Buffered Sampling is used. That is, a set of environments is stored on the rollout worker and divided into two groups, and the CPU utilization is improved by taking turns.
 
 <p>
     <img src="./images/image1.png"/>
@@ -143,4 +139,7 @@ Yizhou: 这里可以用define一下FPS，like，Frame per Second
 </p>
 
 
-在这个框架中，一次迭代中从并行环境中收集的多个经验轨迹在learner中无法在一次mini-batch中消化掉。这会导致policy lag问题，即behavior policy与target policy的不一致。对PG方法来说这种off-policy学习比较困难。因为policy lag越大，从behavior policy采样来准确估计梯度就越难。减少环境中执行步数或者增大mini-batch size可以减少policy lag。除此之外，有两大技术用来处理off-policy学习：trust region（如PPO clipping）和importance sampling（如V-trace）。两者可以同时使用。Sample Factory中两种都实现了。
+In this framework, multiple experience trajectories collected from parallel environments in one iteration cannot be digested in one mini-batch by the learner. This will lead to the policy lag problem, that is, the inconsistency between the behavior policy and the target policy. This kind of off-policy learning is more difficult for the PG method. Because the larger the policy lag is, the harder it is to sample from the behavior policy to accurately estimate the gradient. Reducing the number of execution steps in the environment or increasing the mini-batch size can reduce the policy lag. In addition, there are two major techniques used to deal with off-policy learning: trust region (such as PPO clipping) and importance sampling (such as V-trace). Both can be used at the same time. Both are implemented in the Sample Factory.
+## Reference
+- https://github.com/alex-petrenko/sample-factory.
+- https://blog.csdn.net/jinzhuojun/article/details/113796543.
