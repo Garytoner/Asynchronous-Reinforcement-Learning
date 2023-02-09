@@ -5,6 +5,8 @@ from sample_factory.algorithms.appo.appo import APPO,A3C,IMPALA
 import torch
 import time
 import os
+import tensorboard
+
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "4"
 def parse_args():
@@ -18,7 +20,7 @@ def parse_args():
         help="if toggled, `torch.backends.cudnn.deterministic=False`")
     parser.add_argument("--cuda", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
         help="if toggled, cuda will be enabled by default")
-    parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
+    parser.add_argument("--track", type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
         help="if toggled, this experiment will be tracked with tensorboard")
     # parser.add_argument("--wandb-project-name", type=str, default="cleanRL",
     #     help="the wandb's project name")
@@ -28,8 +30,8 @@ def parse_args():
     #     help="weather to capture videos of the agent performances (check out `videos` folder)")
 
     # Algorithm specific arguments
-    parser.add_argument("--env-id", type=str, default="mujoco_CartPolev1",
-        help="the id of the environment")
+    # parser.add_argument("--env-id", type=str, default="mujoco_CartPolev1",
+    #     help="the id of the environment")
     parser.add_argument("--num_workers", type=int, default=2,
         help="the id of the environment")
     parser.add_argument(
