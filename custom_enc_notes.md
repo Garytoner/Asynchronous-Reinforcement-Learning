@@ -126,3 +126,31 @@ This is a very easy way to make your envs configurable through command-line inte
 See the sample_factory_examples for the default envs, it's actually very simple.
 
 If you want to use a Gym env, just create an empty make_env_func that ignores other parameters and instantiates a copy of your Gym environment.
+
+
+
+
+在环境注册中添加 进Encoder的注册
+
+放在 `xx_env.py` 中
+
+```python
+def ensure_initialized(cfg, env_name):
+    global DMLAB_INITIALIZED
+    if DMLAB_INITIALIZED:
+        return
+
+    dmlab_register_models()
+```
+
+
+
+```python
+def make_dmlab_env(env_name, cfg=None, **kwargs):
+    ensure_initialized(cfg, env_name)
+
+    spec = dmlab_env_by_name(env_name)
+    return make_dmlab_env_impl(spec, cfg=cfg, **kwargs)
+```
+
+`--encoder_custom=dmlab_instructions`

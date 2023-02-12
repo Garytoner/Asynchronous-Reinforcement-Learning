@@ -56,7 +56,7 @@ def main():
   #  args.env_id = "mujoco_halfcheetah"
    # args.env_id = "mujoco_humanoid"
    # args.env_id = "atari_pong"
-   # args.encoder_type ="conv"
+    args.encoder_type ="maze_encoder"
    # args.encoder_subtype ="convnet_test"
    # args.env_id = "mujoco_nasimlarge"
    # device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
