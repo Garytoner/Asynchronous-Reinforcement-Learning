@@ -4,7 +4,7 @@ from torch import nn
 from sample_factory.algorithms.appo.model_utils import get_obs_shape, create_standard_encoder, EncoderBase, register_custom_encoder
 from sample_factory.utils.utils import log
 
-class MazeEncoder(EncoderBase()):
+class MazeEncoder(EncoderBase):
     def __init__(self, cfg, obs_space, timing):
         super().__init__(cfg, timing)
 
