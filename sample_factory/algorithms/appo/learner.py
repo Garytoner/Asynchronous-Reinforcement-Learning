@@ -416,7 +416,7 @@ class LearnerWorker:
         #log.info(optimizer_state_dict)  
         log.debug('sys model weights for model version %d', policy_version)        
         self.global_queue.put((TaskType.INIT_MODEL, model_state))
-
+#conver dictionary form gpu to cpu
     def convert_dict_from_gpu_to_cpu(self,gpu_dict):
         cpu_dict = dict()
         if isinstance(gpu_dict, dict):
@@ -430,7 +430,7 @@ class LearnerWorker:
                 else:
                     cpu_dict[key] = value
         return cpu_dict
-
+#conver list form gpu to cpu
     def convert_list_from_gpu_to_cpu(self,gpu_list):
         cpu_list = list()
         if isinstance(gpu_list, list):

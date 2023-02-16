@@ -15,7 +15,7 @@ pip install minihack
 - modify class MiniHack
 
 ```
-vi modify maze_view_2d.py
+vi ./lib/python3.8/site-packages/minihack/base.py
 modify class MiniHack like this:
 #self.observation_space = gym.spaces.Dict(
         #    self._get_obs_space_dict(dict(NLE_SPACE_ITEMS))
@@ -92,15 +92,11 @@ modify class MiniHack like this:
 
 ```
 Do not import minihack in minihack_utils.py
-import minihack in the begin of main.py of the program,in this repo is minihack_test.py
-
-           
+import minihack in the begin of main.py of the program,in this repo is minihack_test.py      
 ```
-
-
 
 - Set minibatchsize
 
 ```
-set proper minisize,in this repo is 512,otherwize you may encounter the cuda memory problem
+set proper minibatchsize,in this repo is 512,otherwize you may encounter the cuda memory problem
 ```
