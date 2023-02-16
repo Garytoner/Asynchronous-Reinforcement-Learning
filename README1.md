@@ -104,7 +104,7 @@ mlp以maze环境举例，在异步并行软件库接口中，需要做以下操�
 
 1：新建以该环境命名的文件夹maze
 
-2：在该文件夹下新建maze_params.py、maze_utils.py、_init__.py,若需要，可以添加Readme
+2：在该文件夹下新建maze_params.py、maze_utils.py、__init__.py,若需要，可以添加Readme
 
 3：在maze_params.py文件中添加
 
