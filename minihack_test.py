@@ -51,19 +51,19 @@ def main():
     #args.env_id ="procgen:procgen-coinrun-v0"
     args.env_id ="MiniHack-River-v0"
     #args.env_id = "atari_pong"
-    args.encoder_type ="conv"
+    #args.encoder_type ="conv"
     args.encoder_subtype ="convnet_test"
     #args.encoder_subtype ="minigrid_convnet_tiny"
     #args.encoder_subtype ="convnet_test"
-    args.num_workers = 8
-    args.num_envs_per_worker = 8
+    args.num_workers = 2
+    args.num_envs_per_worker = 2
    # args.env_id = "mujoco_nasimlarge"
    # device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     #envs = make_vec_envs(args.env_id, args.seed, args.num_envs, args.gamma)
     #envs = make_vec_envs_sb(args.env_id, n_envs=args.num_envs, seed=45821)
    # params = {0: "./train_dir/default_experiment/checkpoint_p0",1: "./train_dir/default_experiment/checkpoint_p1",2: "./train_dir/default_experiment/checkpoint_p2"}
     #model.set_parameters(params)
-    model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"with_pbt":False,"worker_num_splits":2,"batch_size":512})
+    model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"with_pbt":False,"worker_num_splits":2,"batch_size":512,"encoder_custom":'minihack_encoder'})
    # model.train()
    # params = model.get_parameters()
    # print(params)  
