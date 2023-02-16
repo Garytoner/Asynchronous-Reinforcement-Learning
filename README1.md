@@ -28,7 +28,7 @@ conda activate Asynchronous-Reinforcement-Learning
 
 ### 接口形式
 
-model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：其中APPO可变换为A3C或IMPALA
+model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：其中APPO也可以为A3C或IMPALA，当ppo_clip_ratio=100且ppo_clip_value = 100时，PPO退化为A2C，此时若withvtrace=False，则APPO即退化为A3C，若withvtrace = True时，APPO即退化为IMPALA。因此A3C和IMPALA通过继承APPO实现，不同为若为A3C时，ppo_clip_ratio=100，ppo_clip_value = 100，且withvtrace=False，若为IMPALA时，ppo_clip_ratio=100，ppo_clip_value = 100但withvtrace=Ture.
 
 ### 参数说明
 
@@ -96,6 +96,127 @@ param train_for_env_steps:一次train的步数
 <p>
      <img src="./images/image4.png"/>
 </p>
+## 定制环境
+
+首先判断环境输入是否为图像，若不是图像则使用mlp，若是图像则使用conv，若为图像，则需要wrapper，根据环境类型，一般只需要进行基本的处理，若要定制处理，清参考该环境的官方文档
+
+以XXX环境举例，在异步并行软件库接口中，需要做以下操作：
+
+1：新建以该环境命名的文件夹XXX
+
+2：在该文件夹下新建XXX_params.py和XXX_utils.py
+
+3：在XXX_params.py文件中添加
+
+若该环境处理的是图像，添加
+
+def XXX_override_defaults(env, parser):
+
+parser.set_defaults(
+
+  encoder_type='conv',
+
+​    encoder_subtype='convnet_test',
+
+  )
+
+若该环境处理的不是图像，则添加
+
+def XXX_override_defaults(env, parser):
+
+  parser.set_defaults(
+
+​    encoder_type='mlp',
+
+​    encoder_subtype='mlp_mujoco',   )
+
+  
+
+4：在XXX_utils.py文件中
+
+若该环境处理的是图像，在stable_baseline3中跑该环境，需要做XXXwrapper
+
+添加
+
+import gym
+
+class XXXWrapper():
+
+  .....
+
+  ......
+
+  ......
+
+  
+
+\# noinspection PyUnusedLocal
+
+def make_XXX_env(env_name, cfg=None, **kwargs):
+
+  env = gym.make(env_name)
+
+  env = XXXWrapper(env)
+
+  return env
+
+若该环境处理的不是图像，则添加
+
+import gym
+
+def make_XXX_env(env_name, cfg=None, **kwargs):
+
+  env = gym.make(env_name)
+
+  return env
+
+ 
+
+5:在env_registry.py文件中添加
+
+def XXX_funcs():
+
+  from sample_factory.envs.XXX.XXX_utils import make_XXX_env
+
+  from sample_factory.envs.XXX.XXX_params import XXX_override_defaults
+
+return make_XXX_env, None, XXX_override_defaults
+
+在 def register_default_envs(env_registry) 函数  default_envs 后添加 'XXX': XXX_funcs
+
+示例
+
+def register_default_envs(env_registry):
+
+  """
+
+  Register default envs.
+
+  For this set of env families we register a function that can later create an actual registry entry when required.
+
+  This allows us to import only Python modules that we use.
+
+ 
+
+  """
+
+ 
+
+  default_envs = {
+
+​    'doom_': doom_funcs,
+
+​    'atari_': atari_funcs,
+
+​    'dmlab_': dmlab_funcs,
+
+​    'mujoco_': mujoco_funcs,
+
+​    'MiniGrid': minigrid_funcs,
+
+​    'XXX': XXX_funcs,
+
+  }
 
 ## Sample-Factory介绍
 

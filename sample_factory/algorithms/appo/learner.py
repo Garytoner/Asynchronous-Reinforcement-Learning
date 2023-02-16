@@ -404,29 +404,6 @@ class LearnerWorker:
         for q in self.policy_worker_queues:
             q.put((TaskType.INIT_MODEL, model_state))
 
-    def _sys_model_weights3(self):
-        policy_version = self.train_step
-        optimizer_state_dict = None    
-        if self.cfg.device == 'gpu':
-           self.actor_critic.to('cpu')
-        model_state = (policy_version, self.actor_critic.state_dict())
-        #model_state = (policy_version, self.actor_critic.state_dict(),optimizer_state_dict) 
-        #log.info(optimizer_state_dict)  
-        log.debug('sys model weights for model version %d', policy_version)        
-        self.global_queue.put((TaskType.INIT_MODEL, model_state))
-
-    def _sys_model_weights2(self):
-        policy_version = self.train_step
-        optimizer_state_dict = dict()    
-        if self.cfg.device == 'gpu':
-           self.actor_critic.to('cpu')
-           optimizer_state_dict = self.convert_dict_from_gpu_to_cpu(self.optimizer.state_dict())
-        else:
-           optimizer_state_dict = self.optimizer.state_dict()
-        model_state = (policy_version, self.actor_critic.state_dict(),optimizer_state_dict) 
-        #log.info(optimizer_state_dict)  
-        log.debug('sys model weights for model version %d', policy_version)        
-        self.global_queue.put((TaskType.INIT_MODEL, model_state))
 # send nn parameters to main process
     def _sys_model_weights(self):
         policy_version = self.train_step
@@ -437,31 +414,6 @@ class LearnerWorker:
            actor_critic_state_dict = self.actor_critic.state_dict()
         model_state = (policy_version, actor_critic_state_dict) 
         #log.info(optimizer_state_dict)  
-        log.debug('sys model weights for model version %d', policy_version)        
-        self.global_queue.put((TaskType.INIT_MODEL, model_state))
-
-
-    def _sys_model_weights1(self):
-        policy_version = self.train_step
-        optimizer_state_dict = dict()       
-        if self.cfg.device == 'gpu':
-            self.actor_critic.to('cpu')
-            optimizer_state_dict['state'] = dict()
-            for idx in self.optimizer.state_dict()['state'].keys():
-                    optimizer_state_dict['state'][idx] = dict()
-                    optimizer_state_dict['state'][idx]['step'] = self.optimizer.state_dict()['state'][idx]['step']
-                    optimizer_state_dict['state'][idx]['exp_avg'] = self.optimizer.state_dict()['state'][idx]['exp_avg'].cpu()
-                    optimizer_state_dict['state'][idx]['exp_avg_sq'] = self.optimizer.state_dict()['state'][idx]['exp_avg_sq'].cpu()           
-            optimizer_state_dict['param_groups'] = self.optimizer.state_dict()['param_groups']
-        else:
-            optimizer_state_dict = self.optimizer.state_dict()
-                #torch.tensor(self.optimizer.state_dict()['state'][idx]['exp_avg_sq'],device = 'cpu')
-                #torch.tensor(self.optimizer.state_dict()['state'][idx]['exp_avg'],device = 'cpu')
-            """ self.optimizer.state_dict()['state'][idx]['exp_avg_sq'].cpu()
-            self.optimizer.state_dict()['state'][idx]['exp_avg'].cpu()   """      
-    #model_state = (policy_version, self.actor_critic.state_dict(),self.optimizer.state_dict())       
-        model_state = (policy_version, self.actor_critic.state_dict(),optimizer_state_dict) 
-        #log.info(optimizer_state_dict )  
         log.debug('sys model weights for model version %d', policy_version)        
         self.global_queue.put((TaskType.INIT_MODEL, model_state))
 
@@ -1270,9 +1222,7 @@ class LearnerWorker:
 
             self.init_model(timing)
 
-            #parameters = copy.deepcopy(self.actor_critic.parameters())
             params = list(self.actor_critic.parameters())
-            #params = list(parameters.cpu())
 
             if self.aux_loss_module is not None:
                 params += list(self.aux_loss_module.parameters())
@@ -1287,11 +1237,6 @@ class LearnerWorker:
             self.lr_scheduler = get_lr_scheduler(self.cfg)
 
             self.set_parameters(self.load_path_or_dict)
-            #if self.optim_state_dict != None and  isinstance(self.load_path_or_dict, dict):
-            #        self.optimizer.load_state_dict(self.optim_state_dict)
-
-            #self.load_from_checkpoint(self.policy_id)
-
             self._broadcast_model_weights()  # sync the very first version of the weights
 
         self.train_thread_initialized.set()
@@ -1593,12 +1538,4 @@ class LearnerWorker:
               log.debug('Loading model from checkpoint')
               self._load_state(checkpoint_dict)
 
-    def forceclose(self):
-        if self.process.is_alive():
-            self.terminate = True
-            time.sleep(0.01)
 
-    def clearTaskQueue(self):
-        while not self.task_queue.empty():
-            self.task_queue.get_many()
-        log.info('Learner %d clear task queue',self.worker_idx)

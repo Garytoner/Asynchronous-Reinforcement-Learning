@@ -852,10 +852,6 @@ class ActorWorker:
 
                 self.num_complete_rollouts += len(complete_rollouts)
 
-                """ if self.terminate:
-                      self.policy_queues[policy_id].put(TaskType.ROLLOUT_OVER, self.worker_idx)
-                      runner.close() """
-
 
         with timing.add_time('enqueue_policy_requests'):
             if policy_request is not None:
