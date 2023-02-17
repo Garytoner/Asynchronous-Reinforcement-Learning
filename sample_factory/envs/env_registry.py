@@ -115,7 +115,12 @@ def mujoco_funcs():
 def minigrid_funcs():
     from sample_factory.envs.minigrid.minigrid_utils import make_minigrid_env
     from sample_factory.envs.minigrid.minigrid_params import minigrid_override_defaults
-    return make_minigrid_env, None, minigrid_override_defaults
+    return make_minigrid_env, None, 
+    
+def maze_funcs():
+    from sample_factory.envs.maze.maze_utils import make_maze_env
+    from sample_factory.envs.maze.maze_params import maze_override_defaults
+    return make_maze_env, None, maze_override_defaults
 
 
 def register_default_envs(env_registry):
@@ -132,6 +137,7 @@ def register_default_envs(env_registry):
         'dmlab_': dmlab_funcs,
         'mujoco_': mujoco_funcs,
         'MiniGrid': minigrid_funcs,
+        'maze': maze_funcs,
     }
 
     for envs_prefix, env_funcs in default_envs.items():
