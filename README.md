@@ -14,42 +14,37 @@ Asynchronous-Reinforcement-Learning is used for the research of network attack a
 
 ### Installation instructions
 
-1、Download code: git clone https://github.com/Garytoner/Asynchronous-Reinforcement-Learning.git
+1、Download code: `git clone https://github.com/Garytoner/Asynchronous-Reinforcement-Learning.git`
 
 2、Create a conda virtual environment：
-
+```bash
 cd Asynchronous-Reinforcement-Learning
 
 conda env create -f environment.yml
 
 conda activate Asynchronous-Reinforcement-Learning
-
+```
 ## Asynchronous-Reinforcement-Learning Instructions
 
-### Interface
+## Usage
 
 model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：APPO can be transformed into A3C or IMPALA
 
-### Parameter instructions
+#### Parameters 
 
-param env: training environment
+`env`: training environment
+`encoder`: encoder type
+`encodersubtype`: encoding subtype
+`num_envs_per_worker`: the number of environments that a single actor woreer runs
+`num_workers`: number of actor workers
+`device`: device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
+`policy_kwargs`: other hyperparameters
 
-param encoder: encoder type
 
-param encodersubtype: encoding subtype
-
-param num_envs_per_worker: the number of environments that a single actor woreer runs
-
-param num_workers: number of actor workers
-
-param device: device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
-
-param policy_kwargs: other hyperparameters
 
 ### Get neural network parameters
 
 model.get_parameters()
-
 return：neural network parameters
 
 ### Set neural network parameters

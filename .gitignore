@@ -1,2 +1,5 @@
 sample_factory/algorithms/appo/__pycache__/appo.cpython-36.pyc
 train_dir/default_experiment/.summary/0/events.out.tfevents.1675151553.swai
+train_dir/
+gym-maze/
+sample_factory/envs/maze/__pycache__/
