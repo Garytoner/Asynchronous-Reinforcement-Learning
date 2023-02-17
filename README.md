@@ -1,18 +1,5 @@
 #  Asynchronous-Reinforcement-Learning
-
-
-
-
-
-General advice when using Reinforcement Learning
-Which algorithm should I use?
-Tips and Tricks when creating a custom environment
-Tips and Tricks when implementing an RL algorithm
-Reinforcement Learning Resources
-RL Algorithms
-Reproducibility
-Examples
-
+[English Version](/README.md) | [中文版](/README1.md)
 
 
 ## Background
