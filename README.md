@@ -26,7 +26,7 @@ Asynchronous-Reinforcement-Learning is used for the research of network attack a
 ### Prerequisites 
 | #    | Lib | Version |
 | ---- | ------ | ------|
-| 1    | Python | 3.8   |
+| 1    | Python | 3.8.5   |
 | 2    | Pytorch| 1.6.0 |
 | 3    | Gym    | 0.17.2|
 
@@ -65,7 +65,9 @@ def main():
 > APPO can be transformed into A3C or IMPALA
 TODO:
 ### Reinforcement Learning Tips and Tricks
-
+<!---
+Yizhou: 一个比较General的建议是，简略说一下A3C、IMPALA为啥变换参数就可以？
+-->
 ### Usage 
 
 ```python
@@ -77,6 +79,9 @@ model = APPO(env,                                             # training environ
              device: Union[torch.device, str] = "cpu"，       # device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
              policy_kwargs: Optional[Dict[str, Any]] = None)  #other hyperparameters
 ```
+<!---
+Yizhou: 请解释一些这些函数的用处！！！！！
+-->
 ### Get neural network parameters
 ```
 model.get_parameters()
@@ -109,6 +114,9 @@ train_for_env_steps:The number of steps for training
 
 
 7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include `state_dict` and `check_point`, both of which are overall network parameters.
+<!---
+Yizhou: `state_dict` and `check_point` 的解释一些吧，尤其`check_point`
+-->
 
 
 
