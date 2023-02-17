@@ -1,11 +1,38 @@
 #  Asynchronous-Reinforcement-Learning
 
 
+
+
+
+General advice when using Reinforcement Learning
+Which algorithm should I use?
+Tips and Tricks when creating a custom environment
+Tips and Tricks when implementing an RL algorithm
+Reinforcement Learning Resources
+RL Algorithms
+Reproducibility
+Examples
+
+
+
 ## Background
 Asynchronous-Reinforcement-Learning is used for the research of network attack and can be used with [EVO-PopulationBasedTraining](https://github.com/yyzpiero/EVO-PopulationBasedTraining).  Asynchronous-Reinforcement-Learning is based on [Sample-Factory](https://github.com/alex-petrenko/sample-factory), which is based on the APPO (Asynchronous Proximal Policy Optimization) algorithm. Sample-Factory is proposed in the paper "Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning" by Aleksei Petrenko et al. in 2020. It is a high-throughput training system optimized for a single-machine setting and can achieve throughput higher than 100000 environment frames/second on non-trivial control problems in 3D without sacrificing sample efficiency. Asynchronous-Reinforcement-Learning  transform Sample-Factory (1.23.0) to interface  ,with  the same performance as Sample-factory and can support APPO、A3C、IMPALA.
 
+
+## Features
+
+| Features |  |
+| ------ | ------|
+| Common interface	| ✔️|
+| Custom Environments |  ✔️  |
+| Custom policies| ✔️ |
+| Documentation    | ✔️|
+| State of the art RL methods	| |
+
+
 ## Installation
-### Library version
+
+### Prerequisites 
 | #    | Lib | Version |
 | ---- | ------ | ------|
 | 1    | Python | 3.8   |
@@ -24,26 +51,58 @@ conda env create -f environment.yml
 
 conda activate Asynchronous-Reinforcement-Learning
 ```
-## Asynchronous-Reinforcement-Learning Instructions
 
-## Usage
 
-model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：APPO can be transformed into A3C or IMPALA
+## Getting Started
+This is an example of how to use Proximal Policy Optimization (PPO) to train and run a Cartpole environment:
+```python
+from sample_factory.algorithms.appo.appo import APPO
+env_id = "gym_CartPole-v0"
+device ="gpu"
 
-#### Parameters 
+model = APPO(env=env_id, device=device, 
+             num_workers=2,
+             num_envs_per_worker=8,
+             encoder='mlp', encodersubtype = 'mlp_mujoco')
+    
+model.train(train_for_env_steps=1000000)
+```
 
-`env`: training environment
+> APPO can be transformed into A3C or IMPALA
+TODO:
+### Reinforcement Learning Tips and Tricks
+<!---
+Yizhou: 一个比较General的建议是，简略说一下A3C、IMPALA为啥变换参数就可以？
+-->
+### Usage 
+
+```python
+model = APPO(env,                                             # training environment
+             encoder: str,                                    #
+             encodersubtype:str,
+             num_envs_per_worker:int =2,
+             num_workers:int=8,  
+             device: Union[torch.device, str] = "cpu"， 
+             policy_kwargs: Optional[Dict[str, Any]] = None)
+```
+<!---
+Yizhou: 可以照着上面的方式些
+-->
+
+<!-- `env`: 
 `encoder`: encoder type
 `encodersubtype`: encoding subtype
 `num_envs_per_worker`: the number of environments that a single actor woreer runs
 `num_workers`: number of actor workers
 `device`: device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
-`policy_kwargs`: other hyperparameters
-
-
-
+`policy_kwargs`: other hyperparameters -->
+<!---
+Yizhou: 请解释一些这些函数的用处！！！！！
+-->
 ### Get neural network parameters
-
+<!---
+Yizhou: 代码块！！！！！！
+-->
 model.get_parameters()
 return：neural network parameters
 
@@ -73,11 +132,21 @@ param train_for_env_steps:The number of steps for training
 5. After the actor_worker runs the step, it sends a request to the policy_worker. After the policy_worker receives the request and processes it, it sends an advance_rollout_request message to the actor_worker. After the actor_worker receives the message and processes it, it runs the step and sends a request to the policy_worker. After a complete rollout, it sends a request to the The leraner sends the train command, the learner starts to prepare the buffer, and puts the experience into the buffer, and the train_loop of the learner periodically processes the data and updates the network parameters. The learner puts the network parameters in the shared memory, and the policy worker periodically updates the network parameters from the shared memory.
 
 6. After N steps of training, the training will end. After the actor worker rollout ends, the corresponding actor worker will be suspended. After all the actor workers are suspended, the training will end.
+<!---
+Yizhou: 参考我提的那个Issue， training 没有结束
+-->
 
-7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include state_dict and check_point, both of which are overall network parameters.
+
+7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include `state_dict` and `check_point`, both of which are overall network parameters.
+<!---
+Yizhou: `state_dict` and `check_point` 的解释一些吧，尤其`check_point`
+-->
+
 
 ## training effect and FPS(Frame per Second)：
-
+<!---
+Yizhou: rename this to Benchmark
+-->
 The figure below shows the training effect and FPS of Asynchronous-Reinforcement-Learning in Atari PongNoFrameSkip-V4 1024 environment, APPO algorithm train 16 times, each 10 million steps of training.
 
 ### training effect
@@ -106,6 +175,7 @@ There are three main computational tasks in a typical RL: environment simulation
 
 
 In this framework, multiple experience trajectories collected from parallel environments in one iteration cannot be digested in one mini-batch by the learner. This will lead to the policy lag problem, that is, the inconsistency between the behavior policy and the target policy. This kind of off-policy learning is more difficult for the PG method. Because the larger the policy lag is, the harder it is to sample from the behavior policy to accurately estimate the gradient. Reducing the number of execution steps in the environment or increasing the mini-batch size can reduce the policy lag. In addition, there are two major techniques used to deal with off-policy learning: trust region (such as PPO clipping) and importance sampling (such as V-trace). Both can be used at the same time. Both are implemented in the Sample Factory.
+
 ## Reference
 - https://github.com/alex-petrenko/sample-factory.
 - https://blog.csdn.net/jinzhuojun/article/details/113796543.
