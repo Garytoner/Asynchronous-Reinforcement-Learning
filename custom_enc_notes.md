@@ -143,8 +143,6 @@ def ensure_initialized(cfg, env_name):
     dmlab_register_models()
 ```
 
-
-
 ```python
 def make_dmlab_env(env_name, cfg=None, **kwargs):
     ensure_initialized(cfg, env_name)
