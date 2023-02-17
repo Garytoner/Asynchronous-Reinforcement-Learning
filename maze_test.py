@@ -6,7 +6,7 @@ import torch
 import time
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "7"
 def parse_args():
     # fmt: off
     parser = argparse.ArgumentParser()
@@ -30,10 +30,10 @@ def parse_args():
     # Algorithm specific arguments
     parser.add_argument("--env-id", type=str, default="mujoco_CartPolev1",
         help="the id of the environment")
-    parser.add_argument("--num_workers", type=int, default=2,
+    parser.add_argument("--num_workers", type=int, default=8,
         help="the id of the environment")
     parser.add_argument(
-            '--num_envs_per_worker', default=2, type=int,
+            '--num_envs_per_worker', default=8, type=int,
             help='Number of envs on a single CPU actor, in high-throughput configurations this should be in 10-30 range for Atari/VizDoom '
                     'Must be even for double-buffered sampling!')
     parser.add_argument("--no-obs-norm",type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
@@ -49,7 +49,7 @@ def main():
     args = parse_args()
     device = "gpu"
     args.env_id = "maze-random-10x10-plus-v0"
-
+    
     model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"reward_scale":0.01,"kl_loss_coeff":1.0,"actor_critic_share_weights":False})
     
     model.train(train_for_env_steps=10000)
