@@ -541,71 +541,12 @@ class APPO(ReinforcementLearningAlgorithm):
         log.info('Done!')
 
 
-# init again,discard
-    def _init_finish(self):
-
-        # shared memory allocation
-        self.traj_buffers = SharedBuffers(self.cfg, self.num_agents, self.obs_space, self.action_space)
-
-        self.actor_workers = None
-
-        #self.report_queue = MpQueue(40 * 1000 * 1000)
-        self.policy_workers = dict()
-        self.policy_queues = dict()
-
-        self.learner_workers = dict()
-
-        self.workers_by_handle = None
-
-        self.policy_inputs = [[] for _ in range(self.cfg.num_policies)]
-        self.policy_outputs = dict()
-        for worker_idx in range(self.cfg.num_workers):
-            for split_idx in range(self.cfg.worker_num_splits):
-                self.policy_outputs[(worker_idx, split_idx)] = dict()
-
-        self.policy_avg_stats = dict()
-        self.policy_lag = [dict() for _ in range(self.cfg.num_policies)]
-
-        self.last_timing = dict()
-        #self.env_steps = dict()
-        self.samples_collected = [0 for _ in range(self.cfg.num_policies)]
-        self.total_env_steps_since_resume = 0
-
-        # currently this applies only to the current run, not experiment as a whole
-        # to change this behavior we'd need to save the state of the main loop to a filesystem
-        self.total_train_seconds = 0
-
-        self.last_report = time.time()
-        self.last_experiment_summaries = 0
-
-        self.report_interval = 5.0  # sec
-        self.experiment_summaries_interval = self.cfg.experiment_summaries_interval  # sec
-
-        self.avg_stats_intervals = (2, 12, 60)  # 10 seconds, 1 minute, 5 minutes
-
-        self.fps_stats = deque([], maxlen=max(self.avg_stats_intervals))
-        self.throughput_stats = [deque([], maxlen=5) for _ in range(self.cfg.num_policies)]
-        self.avg_stats = dict()
-        self.stats = dict()  # regular (non-averaged) stats
-        self.global_queues = dict()
-
-        self.rolloutoverqueue = dict()
-
-        self.terminateRolloutWorker= []
-
-        """ for policy_id in range(self.cfg.num_policies):
-          self.env_steps[policy_id] = 0 """
 # set inital nn parameters
     def create_models(self):
         timing = Timing() 
         for policy_id in range(self.cfg.num_policies):
             policy_version = 0
-            #data = (policy_version,None,None)
-            #data = (policy_version,None)
-            #self.actor_critics[policy_id] = data
-            #self.parameters[policy_id] = None
             actor_critic = create_actor_critic(self.cfg, self.obs_space, self.action_space, timing)
-            #optim_state_dict = dict()
             data = (policy_version,actor_critic.state_dict(),False)
             self.actor_critics[policy_id] = data
             self.parameters[policy_id] = actor_critic.state_dict()
@@ -741,8 +682,6 @@ class APPO(ReinforcementLearningAlgorithm):
         learner_idx = 0
         for policy_id in range(self.cfg.num_policies):
             policy_version,state_dict,_ = self.actor_critics[policy_id]
-            #policy_version,_ = self.actor_critics[policy_id]
-            #load_path_or_dict = self.parameters[policy_id]
             env_steps = self.env_steps[policy_id]
             learner_worker = LearnerWorker(
                 learner_idx, policy_id, self.cfg, self.obs_space, self.action_space,
@@ -963,13 +902,6 @@ class APPO(ReinforcementLearningAlgorithm):
 
 
     def train(self,train_for_env_steps):
-    #def run(self):
-
-        """ if self.is_first_init:
-            self.is_first_init = False
-        else:
-            self._init_finish() """
-
         if self.is_first_init:
             self.init_workers()
             self.init_pbt()
@@ -980,7 +912,6 @@ class APPO(ReinforcementLearningAlgorithm):
                 policy_version,state_dict,isSet = self.actor_critics[i] 
                 if isSet:                 
                     w.setpara(state_dict)
-            #self.policy_avg_stats = dict()
             for i, w in enumerate(self.actor_workers):
                w.start()
         """
@@ -988,21 +919,10 @@ class APPO(ReinforcementLearningAlgorithm):
 
         :return: ExperimentStatus (SUCCESS, FAILURE, INTERRUPTED). Useful in testing.
         """
-
         status = ExperimentStatus.SUCCESS
 
-        """ if os.path.isfile(done_filename(self.cfg)):
-            log.warning('Training already finished! Remove "done" file to continue training')
-            return status """
 
         self.train_for_env_steps = self.train_for_env_steps + train_for_env_steps
-
-        #log.info('self env_steps:%d,default train_for_env_steps%d',self.train_for_env_steps,train_for_env_steps)
-
-        """ self.init_workers()
-        self.init_pbt()
-        self.finish_initialization() """
-
         log.info('Collecting experience...')
 
         timing = Timing()
@@ -1044,73 +964,7 @@ class APPO(ReinforcementLearningAlgorithm):
         for i, w in enumerate(self.actor_workers):
             w.presuspend1()
 
-        #for i in range(self.cfg.num_workers):
-        #    self.actor_workers[i].presuspend1()
-
         self.suspendworkers()
-
-        """ all_workers = self.actor_workers
-        for workers in self.policy_workers.values():
-            all_workers.extend(workers)
-        all_workers.extend(self.learner_workers.values())
-
-        child_processes = list_child_processes()
-
-        time.sleep(0.1)
-        log.debug('Closing workers...')
-        for i, w in enumerate(all_workers):
-            w.close()
-            time.sleep(0.01)
-        for i, w in enumerate(all_workers):
-            w.join()
-        log.debug('Workers joined!') """
-
-
-        """ for i,ws in enumerate(self.actor_workers):
-            ws.preclose()
-            #time.sleep(0.01)
-        
-        self.closeworkers()
-        all_workers = []
-        all_workers.extend(self.actor_workers)
-        for workers in self.policy_workers.values():
-            all_workers.extend(workers)
-        all_workers.extend(self.learner_workers.values())
-
-        child_processes = list_child_processes()
-
-        #time.sleep(0.1)
-        log.debug('Closing workers...')
-
-                           
-        time.sleep(0.1)
-        for i, w in enumerate(all_workers):
-            w.join()
-        log.debug('Workers joined!')
-
-        finish_wandb(self.cfg)
-
-        # VizDoom processes often refuse to die for an unidentified reason, so we're force killing them with a hack
-        kill_processes(child_processes)
-
-        fps = self.total_env_steps_since_resume / timing.experience
-        log.info('Collected %r, FPS: %.1f', self.env_steps, fps)
-        log.info('Timing: %s', timing)
-
-        if self._should_end_training():
-            with open(done_filename(self.cfg), 'w') as fobj:
-                fobj.write(f'{self.env_steps}')
-
-        time.sleep(0.5)
-        log.info('Done!')
-
-        self._sys_weights()
-
-        for s in self.env_steps.values():
-            log.info('env_steps:%d',s) """
-
-        #self.clearReportQueue()
-
         for i, w in enumerate(self.learner_workers.values()):
                w.getpara()
 
@@ -1126,12 +980,6 @@ class APPO(ReinforcementLearningAlgorithm):
 
         time.sleep(0.5)
         log.info('Done!')
-
-        #self._sys_weights()
-
-        for s in self.env_steps.values():
-            log.info('env_steps:%d',s)
-
         return status
 
 # get nn parameters

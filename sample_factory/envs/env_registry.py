@@ -122,6 +122,11 @@ def maze_funcs():
     from sample_factory.envs.maze.maze_params import maze_override_defaults
     return make_maze_env, None, maze_override_defaults
 
+def minihack_funcs():
+    from sample_factory.envs.minihack.minihack_utils import make_minihack_env
+    from sample_factory.envs.minihack.minihack_params import minihack_override_defaults
+    return make_minihack_env, None, minihack_override_defaults
+
 
 def register_default_envs(env_registry):
     """
@@ -138,6 +143,7 @@ def register_default_envs(env_registry):
         'mujoco_': mujoco_funcs,
         'MiniGrid': minigrid_funcs,
         'maze': maze_funcs,
+        'MiniHack': minihack_funcs,
     }
 
     for envs_prefix, env_funcs in default_envs.items():

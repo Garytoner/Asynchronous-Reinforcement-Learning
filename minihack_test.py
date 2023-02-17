@@ -1,12 +1,12 @@
 import argparse
-import os
 from distutils.util import strtobool
-from sample_factory.algorithms.appo.appo import APPO,A3C,IMPALA
+import minihack
+from sample_factory.algorithms.appo.appo import APPO ,A3C,IMPALA
 import torch
 import time
 import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "4"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 def parse_args():
     # fmt: off
     parser = argparse.ArgumentParser()
@@ -28,12 +28,12 @@ def parse_args():
     #     help="weather to capture videos of the agent performances (check out `videos` folder)")
 
     # Algorithm specific arguments
-    parser.add_argument("--env-id", type=str, default="mujoco_CartPolev1",
+    parser.add_argument("--env-id", type=str, default="mujoco_CartPolev0",
         help="the id of the environment")
-    parser.add_argument("--num_workers", type=int, default=2,
+    parser.add_argument("--num_workers", type=int, default=32,
         help="the id of the environment")
     parser.add_argument(
-            '--num_envs_per_worker', default=2, type=int,
+            '--num_envs_per_worker', default=32, type=int,
             help='Number of envs on a single CPU actor, in high-throughput configurations this should be in 10-30 range for Atari/VizDoom '
                     'Must be even for double-buffered sampling!')
     parser.add_argument("--no-obs-norm",type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
@@ -48,25 +48,26 @@ def parse_args():
 def main():
     args = parse_args()
     device = "gpu"
-   # args.env_id = "mujoco_maze"
-    args.env_id = "maze-random-10x10-plus-v0"
-   # args.env_id = "mujoco_hopper"
-  #  args.env_id = "mujoco_halfcheetah"
-   # args.env_id = "mujoco_humanoid"
-   # args.env_id = "atari_pong"
-   # args.encoder_type ="conv"
-   # args.encoder_subtype ="convnet_test"
+    #args.env_id ="procgen:procgen-coinrun-v0"
+    args.env_id ="MiniHack-River-v0"
+    #args.env_id = "atari_pong"
+    #args.encoder_type ="conv"
+    args.encoder_subtype ="convnet_test"
+    #args.encoder_subtype ="minigrid_convnet_tiny"
+    #args.encoder_subtype ="convnet_test"
+    args.num_workers = 2
+    args.num_envs_per_worker = 2
    # args.env_id = "mujoco_nasimlarge"
    # device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     #envs = make_vec_envs(args.env_id, args.seed, args.num_envs, args.gamma)
     #envs = make_vec_envs_sb(args.env_id, n_envs=args.num_envs, seed=45821)
    # params = {0: "./train_dir/default_experiment/checkpoint_p0",1: "./train_dir/default_experiment/checkpoint_p1",2: "./train_dir/default_experiment/checkpoint_p2"}
     #model.set_parameters(params)
-    model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"reward_scale":0.01,"kl_loss_coeff":1.0,"actor_critic_share_weights":False)
-   #rd_scale":0.01,"kl_loss_coeff":1.0,"actor_critic_share_weights":False,"reward_scale":0.01,"kl_loss_coeff":1.0,"actor_critic_share_weights":False model.train()
+    model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"with_pbt":False,"worker_num_splits":2,"batch_size":512,"encoder_custom":'minihack_encoder'})
+   # model.train()
    # params = model.get_parameters()
    # print(params)  
-    params = {0: "./train_dir/default_experiment/checkpoint_p0"}  
+   # params = {0: "./train_dir/default_experiment/checkpoint_p0"}  
    # model.train(200000)
    # model.set_parameters(params)
    # params = model.get_parameters()
@@ -79,7 +80,7 @@ def main():
    # model.set_parameters(params)
     #e_model = APPO(envs=args.env_id, device=device, num_envs=args.num_envs, verbose=1)#,  num_steps=256, update_epochs=4, num_minibatches=4, ent_coef=0.02)
     #print("start training")
-   # model.train(200000000)
+    model.train(200000000)
     #mean_reward, std_reward=e_model.eval(num_eval_episodes=10)
     #print(mean_reward)
     #model.eval(num_eval_episodes=2)
@@ -100,33 +101,40 @@ def main():
    # model.train(20000000)
    # #model.eval(num_eval_episodes=10)
    # model.train(10000000000)
-   # params = model.get_parameters()
-   # print(params)
-   # model.train(10000000)
-   # model.set_parameters(params)
-   # params = model.get_parameters()
-   # print(params)
-   # model.train(10000000)
-   # model.set_parameters(params)
-   # params = model.get_parameters()
-   # print(params)
-   # model.train(10000000)
-   # model.set_parameters(params)
-   # params = model.get_parameters()
-   # print(params)
-   # model.train(10000000)
-   # model.set_parameters(params)
-   # params = model.get_parameters()
-   # print(params)
-    model.train(100000000)
+   # model.train(100000)
+   
+   
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
     params = model.get_parameters()
     print(params)
-    model.train(100000000)
-   # model.train(100000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+   # params = model.get_parameters()
+   # print(params)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
     model.set_parameters(params)
     params = model.get_parameters()
     print(params)
-    model.train(100000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    model.train(10000000)
+    
+   # model.train(100000000)
+   # model.train(100000000)
+   # model.train(100000000)
+   # model.train(20000000)
    # model.train(100000000)
    # model.train(100000000)
    # model.train(20000000)

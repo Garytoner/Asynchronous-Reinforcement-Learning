@@ -290,8 +290,6 @@ class PolicyWorker:
                 log.exception('Unknown exception on policy worker')
                 self.terminate = True
 
-        #if self.cfg.device == 'gpu':
-        #    torch.cuda.empty_cache()
 
         time.sleep(0.2)
         log.info('Policy worker avg. requests %.2f, timing: %s', np.mean(request_count), timing)
@@ -306,7 +304,3 @@ class PolicyWorker:
     def join(self):
         join_or_kill(self.process)
 
-    def forceclose(self):
-        if self.process.is_alive():
-            self.finalterminate = True
-            time.sleep(0.01)
