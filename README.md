@@ -1,5 +1,9 @@
 #  Asynchronous-Reinforcement-Learning
-[English Version](/README.md) | [中文版](/README1.md)
+
+
+
+
+
 
 
 ## Background
@@ -44,67 +48,50 @@ conda activate Asynchronous-Reinforcement-Learning
 This is an example of how to use Proximal Policy Optimization (PPO) to train and run a Cartpole environment:
 ```python
 from sample_factory.algorithms.appo.appo import APPO
-env_id = "gym_CartPole-v0"
-device ="gpu"
-
-model = APPO(env=env_id, device=device, 
-             num_workers=2,
-             num_envs_per_worker=8,
-             encoder='mlp', encodersubtype = 'mlp_mujoco')
-    
-model.train(train_for_env_steps=1000000)
+def main():
+    env_id = "gym_CartPole-v0"
+    device ="gpu"
+    model = APPO(env=env_id, device=device, 
+                 num_workers=2,
+                 num_envs_per_worker=8,
+                 encoder='mlp', encodersubtype = 'mlp_mujoco')
+        
+    model.train(train_for_env_steps=100000)
+ 
+ if __name__ == '__main__':
+    main()
 ```
 
 > APPO can be transformed into A3C or IMPALA
 TODO:
 ### Reinforcement Learning Tips and Tricks
-<!---
-Yizhou: 一个比较General的建议是，简略说一下A3C、IMPALA为啥变换参数就可以？
--->
+
 ### Usage 
 
 ```python
 model = APPO(env,                                             # training environment
-             encoder: str,                                    #
-             encodersubtype:str,
-             num_envs_per_worker:int =2,
-             num_workers:int=8,  
-             device: Union[torch.device, str] = "cpu"， 
-             policy_kwargs: Optional[Dict[str, Any]] = None)
+             encoder: str,                                    #  encoding subtype
+             encodersubtype:str,                       #  the number of environments that a single actor worker runs
+             num_envs_per_worker:int =2,                     #  encoding subtype
+             num_workers:int=8,                              # number of actor workers
+             device: Union[torch.device, str] = "cpu"，       # device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
+             policy_kwargs: Optional[Dict[str, Any]] = None)  #other hyperparameters
 ```
-<!---
-Yizhou: 可以照着上面的方式些
--->
-
-<!-- `env`: 
-`encoder`: encoder type
-`encodersubtype`: encoding subtype
-`num_envs_per_worker`: the number of environments that a single actor woreer runs
-`num_workers`: number of actor workers
-`device`: device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
-`policy_kwargs`: other hyperparameters -->
-<!---
-Yizhou: 请解释一些这些函数的用处！！！！！
--->
 ### Get neural network parameters
-<!---
-Yizhou: 代码块！！！！！！
--->
+```
 model.get_parameters()
 return：neural network parameters
-
+```
 ### Set neural network parameters
-
+```
 model.set_parameters(parameters)
-
-param parameters:Dictionary type, the key is policy_id, and the value is the corresponding neural network parameter or checkpoint path
-
+parameters:Dictionary type, the key is policy_id, and the value is the corresponding neural network parameter or checkpoint path
+```
 ### Training
-
+```
 model.train(train_for_env_steps)
-
-param train_for_env_steps:The number of steps for training
-
+train_for_env_steps:The number of steps for training
+```
 
 ## Asynchronous-Reinforcement-Learning's train process
 
@@ -119,21 +106,13 @@ param train_for_env_steps:The number of steps for training
 5. After the actor_worker runs the step, it sends a request to the policy_worker. After the policy_worker receives the request and processes it, it sends an advance_rollout_request message to the actor_worker. After the actor_worker receives the message and processes it, it runs the step and sends a request to the policy_worker. After a complete rollout, it sends a request to the The leraner sends the train command, the learner starts to prepare the buffer, and puts the experience into the buffer, and the train_loop of the learner periodically processes the data and updates the network parameters. The learner puts the network parameters in the shared memory, and the policy worker periodically updates the network parameters from the shared memory.
 
 6. After N steps of training, the training will end. After the actor worker rollout ends, the corresponding actor worker will be suspended. After all the actor workers are suspended, the training will end.
-<!---
-Yizhou: 参考我提的那个Issue， training 没有结束
--->
 
 
 7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include `state_dict` and `check_point`, both of which are overall network parameters.
-<!---
-Yizhou: `state_dict` and `check_point` 的解释一些吧，尤其`check_point`
--->
 
 
-## training effect and FPS(Frame per Second)：
-<!---
-Yizhou: rename this to Benchmark
--->
+
+## Benchmark
 The figure below shows the training effect and FPS of Asynchronous-Reinforcement-Learning in Atari PongNoFrameSkip-V4 1024 environment, APPO algorithm train 16 times, each 10 million steps of training.
 
 ### training effect
