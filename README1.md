@@ -28,7 +28,9 @@ conda activate Asynchronous-Reinforcement-Learning
 
 ### 接口形式
 
-model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)：其中APPO也可以为A3C或IMPALA，当ppo_clip_ratio=100且ppo_clip_value = 100时，PPO退化为A2C，此时若withvtrace=False，则APPO即退化为A3C，若withvtrace = True时，APPO即退化为IMPALA。因此A3C和IMPALA通过继承APPO实现，不同为若为A3C时，ppo_clip_ratio=100，ppo_clip_value = 100，且withvtrace=False，若为IMPALA时，ppo_clip_ratio=100，ppo_clip_value = 100但withvtrace=Ture.
+`model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)`
+
+> 其中APPO也可以为A3C或IMPALA，当`ppo_clip_ratio=100`且`ppo_clip_value = 100`时，PPO退化为A2C，此时若`withvtrace=False`，则APPO即退化为A3C，若`withvtrace = True`时，APPO即退化为IMPALA。因此A3C和IMPALA通过继承APPO实现，不同为若为A3C时，ppo_clip_ratio=100，ppo_clip_value = 100，且withvtrace=False，若为IMPALA时，ppo_clip_ratio=100，ppo_clip_value = 100但withvtrace=Ture.
 
 ### 参数说明
 
@@ -100,11 +102,22 @@ param train_for_env_steps:一次train的步数
 
 首先判断环境输入是否为图像，若不是图像则使用mlp，若是图像则使用conv，若为图像，则需要wrapper，根据环境类型，一般只需要进行基本的处理，若要定制处理，请参考该环境的官方文档
 
+
+### Example
+
+Here, we use [`gym_maze`](https://www.gy) to provide an brief example on how to integrate **customed environment**
+
+
+
 mlp以maze环境举例，在异步并行软件库接口中，需要做以下操作：
+
+To compile with the Sampe Factory []... we XXX
 
 1：新建以该环境命名的文件夹maze
 
-2：在该文件夹下新建maze_params.py、maze_utils.py、__init__.py,若需要，可以添加Readme
+2：在该文件夹下新建maze_params.py、maze_utils.py、__init__.py,  若需要，可以添加Readme
+
+To over rider default traing parameter, it is recommended to build a fucntion `maze_overrideXX`. Hi
 
 3：在maze_params.py文件中添加
 
@@ -197,7 +210,7 @@ conv以minihack环境举例，在异步并行软件库接口中，需要做以�
 2：在该文件夹下新建minihack_params.py、minihack_utils.py、__init__.py,若需要，可以添加Readme
 
 3：在minihack_params.py文件中添加
-
+```python
 def minihack_override_defaults(env, parser):
 
   parser.set_defaults(
@@ -215,7 +228,7 @@ def minihack_override_defaults(env, parser):
 ​    env_frameskip=1,
 
   )
-
+```
   
 
 4：在minihack_utils.py文件中
@@ -238,7 +251,7 @@ def make_minihack_env(env_name, cfg=None, **kwargs):
 
   return env
 
- 
+
 
 5:在env_registry.py文件中添加
 
