@@ -113,10 +113,21 @@ train_for_env_steps:The number of steps for training
 6. After N steps of training, the training will end. After the actor worker rollout ends, the corresponding actor worker will be suspended. After all the actor workers are suspended, the training will end.
 
 
-7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include `state_dict` and `check_point`, both of which are overall network parameters.
+7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include `state_dict` and `check_point`, state_dict is network parameters and check_point containts network parameters and other parameters.
 <!---
 Yizhou: `state_dict` and `check_point` 的解释一些吧，尤其`check_point`
 -->
+
+### Example
+
+Here, we use [`gym_maze`](https://https://github.com/MattChanTK/gym-maze) to provide an brief example on how to integrate **customed environment**
+
+1.To compile with the [Sample-Factory](https://github.com/alex-petrenko/sample-factory)， we create a new folder named maze,then we create maze_params.py、maze_utils.py、'__init__.py'under this folder.You can create maze_model.py and Readme if it is necessary.
+2.To override default traing parameter, it is recommended to build a fucntion `maze_overridedefaults`in maze_params.py.
+3.To create maze environment, it is recommended to build a fucntion `make_maze_env` in maze_utils.py.
+4.To reregister maze environment. it is recommended to build a fucntion `maze_funcs` and add `'maze': maze_funcs,` in the function 'register_default_envs' in maze_utils.py
+
+In this Way,we also custom convolution environment MiniHack but we use `PixelFormatChwWrapper` to transform pixel format.
 
 
 
