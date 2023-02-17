@@ -122,7 +122,7 @@ Yizhou: `state_dict` and `check_point` 的解释一些吧，尤其`check_point`
 
 Here, we use [`gym_maze`](https://https://github.com/MattChanTK/gym-maze) to provide an brief example on how to integrate **customed environment**
 
-1. To compile with the [Sample-Factory](https://github.com/alex-petrenko/sample-factory)， we create a new folder named maze,then we create maze_params.py、maze_utils.py、'__'init__.pyunder this folder.You can create maze_model.py and Readme if it is necessary.
+1. To compile with the [Sample-Factory](https://github.com/alex-petrenko/sample-factory)， we create a new folder named maze,then we create maze_params.py、maze_utils.py、__init__.py under this folder.You can create maze_model.py and Readme if it is necessary.maze_model.py is used for customizing encoder.
 
 2. To override default traing parameter, it is recommended to build a fucntion `maze_overridedefaults`in maze_params.py.
 
