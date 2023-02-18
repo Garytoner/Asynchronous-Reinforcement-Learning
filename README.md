@@ -5,7 +5,7 @@
 
 
 
-
+[English Version](/README.md) | [中文版](/README1.md)
 ## Background
 Asynchronous-Reinforcement-Learning is used for the research of network attack and can be used with [EVO-PopulationBasedTraining](https://github.com/yyzpiero/EVO-PopulationBasedTraining).  Asynchronous-Reinforcement-Learning is based on [Sample-Factory](https://github.com/alex-petrenko/sample-factory), which is based on the APPO (Asynchronous Proximal Policy Optimization) algorithm. Sample-Factory is proposed in the paper "Sample Factory: Egocentric 3D Control From Pixels at 100000 FPS with Asynchronous Reinforcement Learning" by Aleksei Petrenko et al. in 2020. It is a high-throughput training system optimized for a single-machine setting and can achieve throughput higher than 100000 environment frames/second on non-trivial control problems in 3D without sacrificing sample efficiency. Asynchronous-Reinforcement-Learning  transform Sample-Factory (1.23.0) to interface  ,with  the same performance as Sample-factory and can support APPO、A3C、IMPALA.
 
@@ -47,7 +47,7 @@ conda activate Asynchronous-Reinforcement-Learning
 ## Getting Started
 This is an example of how to use Proximal Policy Optimization (PPO) to train and run a Cartpole environment:
 ```python
-from sample_factory.algorithms.appo.appo import APPO
+from Asynchronous_Reinforcement_Learning.algorithms.appo.appo import APPO
 def main():
     env_id = "gym_CartPole-v0"
     device ="gpu"
@@ -63,25 +63,18 @@ def main():
 ```
 
 > APPO can be transformed into A3C or IMPALA
-TODO:
 ### Reinforcement Learning Tips and Tricks
-<!---
-Yizhou: 一个比较General的建议是，简略说一下A3C、IMPALA为啥变换参数就可以？
--->
 ### Usage 
 
 ```python
 model = APPO(env,                                             # training environment
-             encoder: str,                                    #  encoding subtype
-             encodersubtype:str,                       #  the number of environments that a single actor worker runs
-             num_envs_per_worker:int =2,                     #  encoding subtype
+             encoder: str,                                    #  encoder type
+             encodersubtype:str,                       #  encoder subtype 
+             num_envs_per_worker:int =2,                     #  the number of environments that a single actor worker runs
              num_workers:int=8,                              # number of actor workers
              device: Union[torch.device, str] = "cpu"，       # device type, if it is cpu, only use cpu, if it is gpu, use both cpu and gpu
              policy_kwargs: Optional[Dict[str, Any]] = None)  #other hyperparameters
 ```
-<!---
-Yizhou: 请解释一些这些函数的用处！！！！！
--->
 ### Get neural network parameters
 ```
 model.get_parameters()
@@ -114,17 +107,15 @@ train_for_env_steps:The number of steps for training
 
 
 7. After a train is over, the learner puts the network parameters in the shared memory, and the main process updates the relevant network parameters. Network parameters can be set before each train. The set parameters include `state_dict` and `check_point`, state_dict is network parameters and check_point containts network parameters and other parameters.
-<!---
-Yizhou: `state_dict` and `check_point` 的解释一些吧，尤其`check_point`
--->
 
+## Custom environment
 ### Example
 
 Here, we use [`gym_maze`](https://https://github.com/MattChanTK/gym-maze) to provide an brief example on how to integrate **customed environment**
 
-1. To compile with the [Sample-Factory](https://github.com/alex-petrenko/sample-factory)， we create a new folder named maze,then we create maze_params.py、maze_utils.py、__init__.py under this folder.You can create maze_model.py and Readme if it is necessary.maze_model.py is used for customizing encoder.
+1. To run in  [`Asynchronous-Reinforcement-Learning`](https://github.com/Garytoner/Asynchronous-Reinforcement-Learning)， we create a new folder named maze,then we create maze_params.py、maze_utils.py、__init__.py under this folder.You can create maze_model.py and Readme if it is necessary.The maze_model.py is used for customizing encoder.
 
-2. To override default traing parameter, it is recommended to build a fucntion `maze_overridedefaults`in maze_params.py.
+2. To override default training parameters, it is recommended to build a fucntion `maze_override_defaults`in maze_params.py.
 
 3. To create maze environment, it is recommended to build a fucntion `make_maze_env` in maze_utils.py.
 

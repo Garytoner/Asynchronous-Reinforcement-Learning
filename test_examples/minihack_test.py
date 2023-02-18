@@ -1,12 +1,14 @@
 import argparse
-import os
 from distutils.util import strtobool
-from Asynchronous_Reinforcement_Learning.algorithms.appo.appo import APPO,A3C,IMPALA
+import minihack
+from Asynchronous_Reinforcement_Learning.algorithms.appo.appo import APPO ,A3C,IMPALA
 import torch
 import time
+import os
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 def parse_args():
+    # fmt: off
     parser = argparse.ArgumentParser()
     parser.add_argument("--exp-name", type=str, default=os.path.basename(__file__).rstrip(".py"),
         help="the name of this experiment")
@@ -38,26 +40,15 @@ def parse_args():
 def main():
     args = parse_args()
     device = "gpu"
-    args.env_id = "atari_pong"
-    args.encoder_type ="conv"
+    args.env_id ="MiniHack-River-v0"
     args.encoder_subtype ="convnet_test"
-    model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"with_pbt":False})   
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
-    model.train(10000000)
+    args.num_workers = 2
+    args.num_envs_per_worker = 2
+    model = APPO(env=args.env_id, device=device, num_workers=args.num_workers,num_envs_per_worker=args.num_envs_per_worker,encoder=args.encoder_type,encodersubtype=args.encoder_subtype,policy_kwargs = {"num_policies":1,"with_pbt":False,"worker_num_splits":2,"batch_size":512,"encoder_custom":'minihack_encoder'})
+    model.train(100000)
+
+   
+  
 
 if __name__ == '__main__':
     since = time.time()

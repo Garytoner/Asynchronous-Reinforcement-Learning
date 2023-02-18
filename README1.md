@@ -8,7 +8,7 @@
 ### 主要依赖库版本
 | #    | 依赖库 | 版本   | 
 | ---- | ------ | ------| 
-| 1    | Python | 3.8   | 
+| 1    | Python | 3.8.5   | 
 | 2    | Pytorch| 1.6.0 |
 | 3    | Gym    | 0.17.2|
 
@@ -28,25 +28,17 @@ conda activate Asynchronous-Reinforcement-Learning
 
 ### 接口形式
 
+```python
+model = APPO(env,                                             # 训练的环境
+             encoder: str,                                    #  编码器类型
+             encodersubtype:str,                       #  编码子类型
+             num_envs_per_worker:int =2,                     #  单个actor worer 跑的环境数
+             num_workers:int=8,                              # actor worker 数量
+             device: Union[torch.device, str] = "cpu"，       # 设备类型，若为cpu，则只使用cpu，若为gpu,则同时使用cpu和gpu
+             policy_kwargs: Optional[Dict[str, Any]] = None)  #其他超参数 
+```
+
 `model = APPO(env,encoder: str,encodersubtype:str,num_envs_per_worker:int =2,num_workers:int=8,  device: Union[torch.device, str] = "cpu"， policy_kwargs: Optional[Dict[str, Any]] = None)`
-
-> 其中APPO也可以为A3C或IMPALA，当`ppo_clip_ratio=100`且`ppo_clip_value = 100`时，PPO退化为A2C，此时若`withvtrace=False`，则APPO即退化为A3C，若`withvtrace = True`时，APPO即退化为IMPALA。因此A3C和IMPALA通过继承APPO实现，不同为若为A3C时，ppo_clip_ratio=100，ppo_clip_value = 100，且withvtrace=False，若为IMPALA时，ppo_clip_ratio=100，ppo_clip_value = 100但withvtrace=Ture.
-
-### 参数说明
-
-param env：训练的环境
-
-param encoder：编码器类型
-
-param encodersubtype：编码子类型
-
-param num_envs_per_worker：单个actor worer 跑的环境数
-
-param num_workers：actor worker 数量
-
-param device：设备类型，若为cpu，则只使用cpu，若为gpu,则同时使用cpu和gpu
-
-param policy_kwargs：其他超参数 
 
 ### 获取网络参数
 
@@ -100,197 +92,28 @@ param train_for_env_steps:一次train的步数
 </p>
 ## 定制环境
 
-首先判断环境输入是否为图像，若不是图像则使用mlp，若是图像则使用conv，若为图像，则需要wrapper，根据环境类型，一般只需要进行基本的处理，若要定制处理，请参考该环境的官方文档
+### 示例
+这里，我们使用[`gym_size`](https://https://github.com/MattChanTK/gym-maze），提供一个关于如何集成**定制环境的简单示例**
 
 
-### Example
 
-Here, we use [`gym_maze`](https://www.gy) to provide an brief example on how to integrate **customed environment**
+1.运行[“异步强化学习”](https://github.com/Garytoner/Asynchronous-Reinforcement-Learning)，我们创建一个名为maze的新文件夹，然后在此文件夹下创建maze_params.py、maze_utils.py、__init__.py。如果需要，可以创建maze_model.py和Readme。maze_mmodel.py用于自定义编码器。
 
 
 
-mlp以maze环境举例，在异步并行软件库接口中，需要做以下操作：
+2.要覆盖默认训练参数，建议在maze_params.py中构建函数“maze_override_defaults”。
 
-To compile with the Sampe Factory []... we XXX
 
-1：新建以该环境命名的文件夹maze
 
-2：在该文件夹下新建maze_params.py、maze_utils.py、__init__.py,  若需要，可以添加Readme
+3.要创建迷宫环境，建议在maze_utils.py中构建函数“make_maze_env”。
 
-To over rider default traing parameter, it is recommended to build a fucntion `maze_overrideXX`. Hi
 
-3：在maze_params.py文件中添加
 
-def maze_override_defaults(env, parser):
+4.注册迷宫环境。建议构建函数“maze_funcs”，并在env_registry.py中的函数“register_default_envs”中添加“maze:funcs”
 
-  parser.set_defaults(
 
-​    hidden_size=128,
 
-​    obs_subtract_mean=4.0,
-
-​    obs_scale=8.0,
-
-​    exploration_loss_coeff=0.005,
-
-​    env_frameskip=1,
-
-  )
-
-  
-
-4：在maze_utils.py文件中
-
-添加
-
-import gym
-
-import gym_maze
-
-
-
-def make_maze_env(env_name, cfg=None, **kwargs):
-
-  env = gym.make(env_name)
-
-  return env
-
- 
-
-5:在env_registry.py文件中添加
-
-def maze_funcs():
-
-  from sample_factory.envs.maze.maze_utils import make_maze_env
-
-  from sample_factory.envs.maze.maze_params import maze_override_defaults
-
-在 def register_default_envs(env_registry) 函数  default_envs 后添加 'maze': maze_funcs
-
-示例
-
-def register_default_envs(env_registry):
-
-  """
-
-  Register default envs.
-
-  For this set of env families we register a function that can later create an actual registry entry when required.
-
-  This allows us to import only Python modules that we use.
-
- 
-
-  """
-
- 
-
-  default_envs = {
-
-​    'doom_': doom_funcs,
-
-​    'atari_': atari_funcs,
-
-​    'dmlab_': dmlab_funcs,
-
-​    'mujoco_': mujoco_funcs,
-
-​    'MiniGrid': minigrid_funcs,
-
-​    'maze': maze_funcs,
-
-  }
-
-
-
-conv以minihack环境举例，在异步并行软件库接口中，需要做以下操作：
-
-1：新建以该环境命名的文件夹minihack
-
-2：在该文件夹下新建minihack_params.py、minihack_utils.py、__init__.py,若需要，可以添加Readme
-
-3：在minihack_params.py文件中添加
-```python
-def minihack_override_defaults(env, parser):
-
-  parser.set_defaults(
-
-​    encoder_subtype='convnet_test',
-
-​    hidden_size=128,
-
-​    obs_subtract_mean=4.0,
-
-​    obs_scale=8.0,
-
-​    exploration_loss_coeff=0.005,
-
-​    env_frameskip=1,
-
-  )
-```
-  
-
-4：在minihack_utils.py文件中
-
-添加
-
-import gym
-
-from sample_factory.envs.env_wrappers import PixelFormatChwWrapper
-
-
-
-\# noinspection PyUnusedLocal
-
-def make_minihack_env(env_name, cfg=None, **kwargs):
-
-  env = gym.make(env_name, observation_keys=["pixel"])
-
-  env = PixelFormatChwWrapper(env)
-
-  return env
-
-
-
-5:在env_registry.py文件中添加
-
-def minihack_funcs():
-    from sample_factory.envs.minihack.minihack_utils import make_minihack_env
-    from sample_factory.envs.minihack.minihack_params import minihack_override_defaults
-    return make_minihack_env, None, minihack_override_defaults
-
-示例
-
-def register_default_envs(env_registry):
-
-  """
-
-  Register default envs.
-
-  For this set of env families we register a function that can later create an actual registry entry when required.
-
-  This allows us to import only Python modules that we use.
-
- 
-
-  """
-
-  default_envs = {
-
-​    'doom_': doom_funcs,
-
-​    'atari_': atari_funcs,
-
-​    'dmlab_': dmlab_funcs,
-
-​    'mujoco_': mujoco_funcs,
-
-​    'MiniGrid': minigrid_funcs,
-
-​    'MiniHack': minihack_funcs,
-
-  }
+通过这种方式，我们还定制了卷积环境MiniHack，但我们使用“PixelFormatChwWrapper”来转换像素格式。
 
 ## Sample-Factory介绍
 
