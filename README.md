@@ -113,15 +113,15 @@ train_for_env_steps:The number of steps for training
 
 Here, we use [`gym_maze`](https://https://github.com/MattChanTK/gym-maze) to provide an brief example on how to integrate **customed environment**
 
-1. To run in  [`Asynchronous-Reinforcement-Learning`](https://github.com/Garytoner/Asynchronous-Reinforcement-Learning)， we create a new folder named maze,then we create maze_params.py、maze_utils.py、__init__.py under this folder.You can create maze_model.py and Readme if it is necessary.The maze_model.py is used for customizing encoder.
+1. To run in  [`Asynchronous-Reinforcement-Learning`](https://github.com/Garytoner/Asynchronous-Reinforcement-Learning)，we create a new folder named maze, then we create `maze_params.py`、`maze_utils.py`、`__init__.py` under this folder.You can create maze_model.py and README if it is necessary.The `maze_model.py` is used for customizing encoder.
 
 2. To override default training parameters, it is recommended to build a fucntion `maze_override_defaults`in maze_params.py.
 
 3. To create maze environment, it is recommended to build a fucntion `make_maze_env` in maze_utils.py.
 
-4. To register maze environment. it is recommended to build a fucntion `maze_funcs` and add `'maze': maze_funcs,` in the function 'register_default_envs' in env_registry.py
+4. To register maze environment. it is recommended to build a fucntion `maze_funcs` and add an item `'maze': maze_funcs,` in the function 'register_default_envs' in env_registry.py
 
-In this way,we also custom convolution environment MiniHack but we use `PixelFormatChwWrapper` to transform pixel format.
+In this way, we also custom convolution environment MiniHack but we use `PixelFormatChwWrapper` to transform pixel format.
 
 
 
